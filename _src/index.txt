@@ -1,4 +1,4 @@
-@lead 身近な会社の21のケースを通じて、日商簿記3級の全範囲を学ぶ教科書。全21章と付録3本。
+@lead 身近な会社の21のケースを通じて、日商簿記3級の全範囲を学ぶ教科書。全21章と付録4本。
 
 <h2 class="mb-1 mt-10 font-serif text-xl font-black text-gray-900 sm:text-2xl">目次</h2>
 ::toc compact
