@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # ======================================================================
-#  簿記3級 チートコード ― 静的サイトジェネレーター（Perl 5 / 追加モジュール不要）
+#  ケースで学ぶ簿記3級 ― 静的サイトジェネレーター（Perl 5 / 追加モジュール不要）
 #
 #  使い方:   perl build.pl          （Git Bash などから実行）
 #  入力:     _src/book.txt   … 章の並び（1行1ID）
@@ -10,7 +10,7 @@
 #
 #  ■ 章ファイル先頭のメタデータ
 #    @num 第3章   @part 第2部 …   @title 問い（章タイトル）   @subtitle 論点名
-#    @lead 紹介文   @goal この章で手に入る武器（複数行可）   @time 25分   @level ★★☆
+#    @lead 紹介文   @goal この章で学ぶこと（複数行可）   @time 25分   @level ★★☆
 #
 #  ■ 行の記法
 #    ## 見出し（自動採番・章内目次に掲載） / ### 小見出し / #### 小小見出し
@@ -39,8 +39,8 @@ use FindBin qw($Bin);
 
 my $ROOT     = $Bin;
 my $SRC      = "$ROOT/_src";
-my $BOOK     = '簿記3級 チートコード';
-my $BOOK_SUB = '資本主義というゲームの攻略本';
+my $BOOK     = 'ケースで学ぶ簿記3級';
+my $BOOK_SUB = '身近な会社の数字で、日商簿記3級の全範囲を学ぶ';
 
 our ($CUR, $DARK, $SECN) = ('', 0, 0);
 our %CTX;
@@ -298,7 +298,7 @@ sub r_box {
     if ($name eq 'mystery') {
         return qq{<section class="relative my-10 overflow-hidden bg-gray-900 text-white p-6 rounded-lg shadow-lg sm:p-8">}
              . qq{<div aria-hidden="true" class="pointer-events-none absolute -right-3 -top-10 select-none font-serif text-[10rem] font-black leading-none text-white/5">?</div>}
-             . qq{<p class="relative mb-4 flex items-center gap-2 text-[11px] font-bold tracking-[0.3em] text-amber-400"><span class="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400"></span>BUSINESS MYSTERY</p>}
+             . qq{<p class="relative mb-4 flex items-center gap-2 text-[11px] font-bold tracking-[0.3em] text-amber-400"><span class="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400"></span>QUESTION ― この章の問い</p>}
              . ($a ne '' ? '<h2 class="relative mb-5 font-serif text-xl font-black leading-snug text-white sm:text-2xl">' . inl($a) . '</h2>' : '')
              . '<div class="relative">' . inner($k, $name) . '</div></section>';
     }
@@ -310,18 +310,18 @@ sub r_box {
     }
     if ($name eq 'danger') {
         return qq{<aside class="my-8 rounded-lg border border-t-4 border-red-200 border-t-red-600 bg-red-50 p-5 sm:p-6">}
-             . label('text-red-700', '⚠ DEATH VALLEY ― 死の谷')
+             . label('text-red-700', '⚠ RISK ― 経営の落とし穴')
              . $title->('mb-3 text-lg font-bold leading-snug text-red-950')
              . inner($k, $name) . '</aside>';
     }
     if ($name eq 'cfo') {
         return qq{<section class="my-8 rounded-lg border-2 border-amber-300 bg-amber-50 p-5 sm:p-6">}
-             . label('text-amber-700', 'DECISION ― あなたがCFOなら？')
+             . label('text-amber-700', 'THINK ― 判断してみよう')
              . $title->('mb-3 text-lg font-bold leading-snug text-amber-950')
              . inner($k, $name) . '</section>';
     }
     if ($name eq 'answer') {
-        my $lab = $a ne '' ? $a : ($parent eq 'cfo' ? 'CFOの思考プロセスを見る' : '解答・解説を見る');
+        my $lab = $a ne '' ? $a : ($parent eq 'cfo' ? '考え方の例を見る' : '解答・解説を見る');
         return qq{<details class="group mt-5 rounded-lg border border-gray-300 bg-white text-gray-800 shadow-sm">}
              . qq{<summary class="flex cursor-pointer select-none items-center justify-between gap-3 rounded-lg px-4 py-3 font-bold text-gray-900 hover:bg-gray-50"><span>} . inl($lab)
              . qq{</span><span class="flex-none text-xs text-gray-400 transition-transform group-open:rotate-180">▼</span></summary>}
@@ -335,13 +335,13 @@ sub r_box {
     }
     if ($name eq 'next') {
         return qq{<aside class="my-8 rounded-lg border border-violet-200 bg-violet-50 p-5 sm:p-6">}
-             . label('text-violet-700', 'NEXT LEVEL ― 2級・1級・実務への伏線')
+             . label('text-violet-700', 'NEXT STEP ― 2級・1級・実務へのつながり')
              . $title->('mb-3 text-lg font-bold leading-snug text-violet-950')
              . inner($k, $name) . '</aside>';
     }
     if ($name eq 'solve') {
         return qq{<section class="my-12 rounded-lg border-2 border-gray-900 bg-white p-6 shadow-[6px_6px_0_0_#111827] sm:p-8">}
-             . label('text-amber-600', 'MYSTERY SOLVED ― 謎解き')
+             . label('text-amber-600', 'ANSWER ― 答え合わせ')
              . $title->('mb-4 font-serif text-xl font-black leading-snug text-gray-900 sm:text-2xl')
              . inner($k, $name) . '</section>';
     }
@@ -376,7 +376,7 @@ sub r_box {
         local $CTX{check} = 1;
         return qq{<section class="my-14 rounded-lg border-t-4 border-gray-900 bg-white p-6 shadow-sm sm:p-8">}
              . label('text-gray-400', 'SUMMARY')
-             . '<p class="mb-4 font-serif text-xl font-black text-gray-900">' . ($a ne '' ? inl($a) : 'この章で手に入れた武器') . '</p>'
+             . '<p class="mb-4 font-serif text-xl font-black text-gray-900">' . ($a ne '' ? inl($a) : 'この章のまとめ') . '</p>'
              . inner($k, $name) . '</section>';
     }
     if ($name eq 'point') {
@@ -833,7 +833,7 @@ sub footer_html {
     return <<'HTML';
 <footer class="mt-16 border-t border-gray-200 bg-white">
   <div class="mx-auto max-w-3xl space-y-2 px-4 py-10 text-xs leading-relaxed text-gray-500 sm:px-6">
-    <p class="font-bold text-gray-700">簿記3級 チートコード ― 資本主義というゲームの攻略本</p>
+    <p class="font-bold text-gray-700">ケースで学ぶ簿記3級 ― 身近な会社の数字で、日商簿記3級の全範囲を学ぶ</p>
     <p>本書に登場する企業・人物・数値は、学習のために設計した架空のものです。実在の企業・団体・商品とは関係ありません。</p>
     <p>出題範囲は日本商工会議所「商工会議所簿記検定試験 出題区分表」（2022年度適用版。2026年度の試験まで適用）に準拠し、2027年4月以降の試験に適用される改定（暫定版）の要点も併記しています。受験前に必ず日本商工会議所の公式情報をご確認ください。</p>
   </div>
@@ -895,8 +895,8 @@ sub chapter_hero {
     $h .= '</header>';
     if (@{ $m->{goals} }) {
         $h .= qq{<section class="mt-8 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">}
-            . label('text-amber-600', 'WEAPONS')
-            . '<p class="mb-3 font-bold text-gray-900">この章で手に入る武器</p><ul class="space-y-2">'
+            . label('text-amber-600', 'GOALS')
+            . '<p class="mb-3 font-bold text-gray-900">この章で学ぶこと</p><ul class="space-y-2">'
             . join('', map { '<li class="flex gap-3 text-[15px] leading-relaxed"><span class="mt-0.5 flex-none font-black text-amber-500">▸</span><span>' . inl($_) . '</span></li>' } @{ $m->{goals} })
             . '</ul></section>';
     }
@@ -989,8 +989,8 @@ sub cover_top {
          . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-0 opacity-[0.08]"><div class="absolute left-0 right-0 top-28 h-px bg-white"></div><div class="absolute bottom-0 left-1/2 top-28 w-px bg-white"></div>}
          . qq{<div class="absolute left-[12%] top-12 font-serif text-5xl font-black sm:text-7xl">借方</div><div class="absolute right-[12%] top-12 font-serif text-5xl font-black sm:text-7xl">貸方</div></div>}
          . qq{<div class="relative mx-auto max-w-3xl px-4 pb-16 pt-24 sm:px-6 sm:pb-24 sm:pt-32">}
-         . qq{<p class="text-[11px] font-bold tracking-[0.35em] text-amber-400">THE CHEAT CODE FOR CAPITALISM</p>}
-         . qq{<h1 class="mt-6 font-serif text-[2.6rem] font-black leading-[1.2] sm:text-6xl">簿記3級<br>チートコード</h1>}
+         . qq{<p class="text-[11px] font-bold tracking-[0.3em] text-amber-400">日商簿記3級 全範囲対応</p>}
+         . qq{<h1 class="mt-6 font-serif text-[2.6rem] font-black leading-[1.2] sm:text-6xl">ケースで学ぶ<br>簿記3級</h1>}
          . qq{<p class="mt-5 text-lg font-bold text-amber-300 sm:text-xl">$BOOK_SUB</p>}
          . ($m->{lead} ? '<p class="mt-6 max-w-xl leading-[1.95] text-gray-300">' . inl($m->{lead}) . '</p>' : '')
          . qq{<div class="mt-9 flex flex-wrap gap-3"><a href="$start" class="rounded-md bg-amber-400 px-5 py-3 font-black text-gray-900 transition hover:bg-amber-300">序章から読む →</a><a href="#toc" class="rounded-md border border-white/30 px-5 py-3 font-bold text-white transition hover:bg-white/10">目次を見る</a></div>}
