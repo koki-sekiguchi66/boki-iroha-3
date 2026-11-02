@@ -725,12 +725,29 @@ sub href_for {
 }
 
 sub r_toc {
+    my ($arg) = @_;
+    my $compact = ($arg // '') eq 'compact';    # 表紙用：章番号と論点名だけの1行リスト
     my $html = qq{<div id="toc" class="scroll-mt-20">};
     my $part = "\0";
     my $open = 0;
     for my $id (@{ $CTX{ids} }) {
         my $m = $META{$id};
         my $p = $m->{part} // '';
+        if ($compact) {
+            if ($p ne $part) {
+                $html .= '</ol></section>' if $open;
+                $part = $p;
+                $html .= '<section class="mt-6"><h3 class="mb-2 px-1 text-[11px] font-bold tracking-[0.2em] text-gray-400">' . esc($p) . '</h3>'
+                       . '<ol class="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">';
+                $open = 1;
+            }
+            my $href = href_for($id, $CTX{mode} // 'page');
+            $html .= qq{<li><a href="$href" class="group flex items-center gap-3 px-4 py-3 transition hover:bg-amber-50">}
+                   . '<span class="w-12 flex-none text-xs font-bold text-gray-400">' . esc($m->{num}) . '</span>'
+                   . '<span class="min-w-0 flex-1 font-bold leading-snug text-gray-900 [word-break:auto-phrase]">' . esc($m->{subtitle}) . '</span>'
+                   . '<span aria-hidden="true" class="flex-none text-lg leading-none text-gray-300 transition group-hover:text-amber-500">›</span></a></li>';
+            next;
+        }
         if ($p ne $part) {
             $html .= '</div></section>' if $open;
             $part = $p;
@@ -745,7 +762,7 @@ sub r_toc {
                . ($m->{lead} ? '<p class="mt-1.5 text-sm leading-relaxed text-gray-500">' . inl($m->{lead}) . '</p>' : '')
                . '</a>';
     }
-    $html .= '</div></section>' if $open;
+    $html .= ($compact ? '</ol></section>' : '</div></section>') if $open;
     return $html . '</div>';
 }
 
@@ -826,8 +843,8 @@ sub site_header {
          . qq{<details data-dropdown class="relative"><summary class="flex cursor-pointer select-none items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-bold text-gray-700 hover:bg-gray-50">目次<span class="text-[10px] text-gray-400">▼</span></summary>}
          . qq{<nav class="absolute right-0 mt-2 max-h-[75vh] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border border-gray-200 bg-white p-2 shadow-xl">}
          . ($mode eq 'all'
-              ? qq{<a href="index.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">章ごとのページ版へ</a>}
-              : qq{<a href="index.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">表紙・目次</a><a href="all.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">全章一気読み版（1ファイル）</a>})
+              ? qq{<a href="index.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">章ごとのページ版へ</a><a href="guide.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">本書の使い方</a>}
+              : qq{<a href="index.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">表紙・目次</a><a href="guide.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">本書の使い方</a><a href="all.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">全章一気読み版（1ファイル）</a>})
          . nav_list($cur, $mode)
          . qq{</nav></details></div></div></header>\n};
 }
@@ -862,6 +879,20 @@ sub script_html {
     });
   });
   addEventListener('beforeprint', () => document.querySelectorAll('main details').forEach((d) => (d.open = true)));
+  // 「続きから読む」: 章ページを開いたら記録し、表紙で再開ボタンを出す（保存できない環境では何もしない）
+  try {
+    const page = document.body.dataset.page;
+    if (page) localStorage.setItem('kb3-last', JSON.stringify({ id: page, label: document.body.dataset.label || '' }));
+    const cont = document.getElementById('cta-continue');
+    const last = JSON.parse(localStorage.getItem('kb3-last') || 'null');
+    if (cont && last && last.id) {
+      cont.href = last.id + '.html';
+      cont.querySelector('[data-label]').textContent = last.label;
+      cont.classList.remove('hidden');
+      const start = document.getElementById('cta-start');
+      if (start) start.className = 'rounded-md border border-white/30 px-5 py-3 font-bold text-white transition hover:bg-white/10';
+    }
+  } catch (e) {}
 })();
 </script>
 HTML
@@ -869,8 +900,9 @@ HTML
 
 sub page_html {
     my (%o) = @_;
+    my $rec = $o{record} ? ' data-page="' . esc($o{cur}) . '" data-label="' . esc($o{record}) . '"' : '';
     return head_html($o{title}, $o{desc})
-         . qq{<body id="top" class="bg-stone-50 font-sans text-[16px] text-gray-800 antialiased sm:text-[17px]">\n}
+         . qq{<body id="top"$rec class="bg-stone-50 font-sans text-[16px] text-gray-800 antialiased sm:text-[17px]">\n}
          . qq{<div id="progress" class="no-print fixed left-0 top-0 z-50 h-1 w-0 bg-amber-500"></div>\n}
          . site_header($o{cur}, $o{mode})
          . ($o{top} // '')
@@ -904,7 +936,8 @@ sub chapter_hero {
             . '</ul></section>';
     }
     if ($TOC{$id} && @{ $TOC{$id} }) {
-        $h .= qq{<details class="group mt-4 rounded-lg border border-gray-200 bg-white shadow-sm"><summary class="flex cursor-pointer select-none items-center justify-between px-5 py-3 text-sm font-bold text-gray-700">この章の目次<span class="text-xs text-gray-400 transition-transform group-open:rotate-180">▼</span></summary><ol class="space-y-1.5 border-t border-gray-100 px-5 py-4 text-sm">};
+        my $toclabel = $id eq 'guide' ? 'このページの目次' : 'この章の目次';
+        $h .= qq{<details class="group mt-4 rounded-lg border border-gray-200 bg-white shadow-sm"><summary class="flex cursor-pointer select-none items-center justify-between px-5 py-3 text-sm font-bold text-gray-700">$toclabel<span class="text-xs text-gray-400 transition-transform group-open:rotate-180">▼</span></summary><ol class="space-y-1.5 border-t border-gray-100 px-5 py-4 text-sm">};
         my $i = 0;
         for my $s (@{ $TOC{$id} }) {
             $i++;
@@ -976,28 +1009,45 @@ for my $i (0 .. $#IDS) {
     spew("$OUT/$id.html", page_html(
         title => "$m->{num} $m->{subtitle} | $BOOK",
         desc  => "$m->{title} ― $m->{subtitle}。$BOOK_SUB",
-        cur   => $id,
+        cur    => $id,
+        mode   => 'page',
+        main   => $main,
+        record => "$m->{num} $m->{subtitle}",
+    ));
+    $count++;
+}
+
+# 本書の使い方（章の並びには含めない独立ページ）
+if (-e "$SRC/guide.txt") {
+    read_source('guide');
+    local $CTX{mode} = 'page';
+    my $body = render_body('guide');
+    my $cta  = qq{<nav class="no-print mt-16"><a href="$IDS[0].html" class="group block rounded-lg border border-gray-900 bg-gray-900 p-5 text-center transition hover:bg-gray-800">}
+             . qq{<p class="text-xs font-bold text-amber-400">準備ができたら</p><p class="mt-1 text-lg font-black text-white group-hover:underline">序章から読む →</p></a></nav>};
+    spew("$OUT/guide.html", page_html(
+        title => "本書の使い方 | $BOOK",
+        desc  => $META{guide}{lead} // $BOOK_SUB,
+        cur   => '',
         mode  => 'page',
-        main  => $main,
+        main  => chapter_hero('guide') . "\n" . $body . "\n" . $cta,
     ));
     $count++;
 }
 
 # 表紙
-sub cover_top {
-    my $mode = shift;
-    my $m    = $META{index};
+sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに絞る
+    my $mode  = shift;
     my $start = $mode eq 'all' ? "#$IDS[0]" : "$IDS[0].html";
+    my $cont  = $mode eq 'all' ? '' : qq{<a id="cta-continue" href="$start" class="hidden rounded-md bg-amber-400 px-5 py-3 font-black text-gray-900 transition hover:bg-amber-300">続きから読む →<span data-label class="mt-0.5 block text-xs font-bold text-gray-700"></span></a>};
     return qq{<section class="relative overflow-hidden bg-gray-900 text-white">}
-         . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-0 opacity-[0.08]"><div class="absolute left-0 right-0 top-28 h-px bg-white"></div><div class="absolute bottom-0 left-1/2 top-28 w-px bg-white"></div>}
-         . qq{<div class="absolute left-[12%] top-12 font-serif text-5xl font-black sm:text-7xl">借方</div><div class="absolute right-[12%] top-12 font-serif text-5xl font-black sm:text-7xl">貸方</div></div>}
-         . qq{<div class="relative mx-auto max-w-3xl px-4 pb-16 pt-24 sm:px-6 sm:pb-24 sm:pt-32">}
-         . qq{<p class="text-[11px] font-bold tracking-[0.3em] text-amber-400">日商簿記3級 全範囲対応</p>}
-         . qq{<h1 class="mt-6 font-serif text-[2.6rem] font-black leading-[1.2] sm:text-6xl">ケースで学ぶ<br>簿記3級</h1>}
-         . qq{<p class="mt-5 text-lg font-bold text-amber-300 sm:text-xl">$BOOK_SUB</p>}
-         . ($m->{lead} ? '<p class="mt-6 max-w-xl leading-[1.95] text-gray-300">' . inl($m->{lead}) . '</p>' : '')
-         . qq{<div class="mt-9 flex flex-wrap gap-3"><a href="$start" class="rounded-md bg-amber-400 px-5 py-3 font-black text-gray-900 transition hover:bg-amber-300">序章から読む →</a><a href="#toc" class="rounded-md border border-white/30 px-5 py-3 font-bold text-white transition hover:bg-white/10">目次を見る</a></div>}
-         . ($m->{note} ? '<p class="mt-8 text-xs leading-relaxed text-gray-400">' . inl($m->{note}) . '</p>' : '')
+         . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-0 opacity-[0.08]"><div class="absolute left-0 right-0 top-24 h-px bg-white"></div><div class="absolute bottom-0 left-1/2 top-24 w-px bg-white"></div>}
+         . qq{<div class="absolute left-[12%] top-8 font-serif text-5xl font-black sm:text-7xl">借方</div><div class="absolute right-[12%] top-8 font-serif text-5xl font-black sm:text-7xl">貸方</div></div>}
+         . qq{<div class="relative mx-auto max-w-3xl px-4 pb-12 pt-16 sm:px-6 sm:pb-16 sm:pt-24">}
+         . qq{<h1 class="font-serif text-[2.6rem] font-black leading-[1.2] sm:text-6xl">ケースで学ぶ<br>簿記3級</h1>}
+         . qq{<p class="mt-4 font-bold text-amber-300 text-balance [word-break:auto-phrase] sm:text-lg">$BOOK_SUB</p>}
+         . qq{<div class="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">$cont}
+         . qq{<a id="cta-start" href="$start" class="rounded-md bg-amber-400 px-5 py-3 font-black text-gray-900 transition hover:bg-amber-300">序章から読む →</a>}
+         . qq{<a href="guide.html" class="text-sm font-bold text-gray-300 underline decoration-gray-500 underline-offset-4 transition hover:text-white">はじめての方へ</a></div>}
          . qq{</div></section>\n};
 }
 

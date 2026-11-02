@@ -13,7 +13,8 @@
 | パス | 内容 |
 | --- | --- |
 | `public/` | **公開するファイル（HTMLのみ）**。`build.pl` が自動生成する |
-| `public/index.html` | 表紙・本書の読み方・目次 |
+| `public/index.html` | 表紙と目次（学習を始めるための最小限の情報だけ） |
+| `public/guide.html` | 本書の使い方（ボックスの見方・学習の進め方・出題範囲） |
 | `public/ch00.html` | 序章　黒字倒産と、簿記を学ぶ意味 |
 | `public/ch01.html`〜`ch19.html` | 第1章〜第19章（簿記の基本原理 → 諸取引 → 決算） |
 | `public/ch20.html` | 終章　2級・1級、そして実務へ |
