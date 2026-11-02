@@ -6,7 +6,8 @@
 #  入力:     _src/book.txt   … 章の並び（1行1ID）
 #            _src/index.txt  … 表紙ページの本文
 #            _src/<id>.txt   … 各章の本文（独自マークアップ）
-#  出力:     index.html / <id>.html / all.html（全章一気読み版）
+#  出力:     public/ に index.html / <id>.html / all.html（全章一気読み版）
+#            ※公開（Cloudflare Pages）するのは public/ の中身だけ
 #
 #  ■ 章ファイル先頭のメタデータ
 #    @num 第3章   @part 第2部 …   @title 問い（章タイトル）   @subtitle 論点名
@@ -39,6 +40,8 @@ use FindBin qw($Bin);
 
 my $ROOT     = $Bin;
 my $SRC      = "$ROOT/_src";
+my $OUT      = "$ROOT/public";    # 公開用の出力先（Cloudflare Pages の Build output directory）
+mkdir $OUT or die "出力先を作成できません $OUT: $!\n" unless -d $OUT;
 my $BOOK     = 'ケースで学ぶ簿記3級';
 my $BOOK_SUB = '身近な会社の数字で、日商簿記3級の全範囲を学ぶ';
 
@@ -970,7 +973,7 @@ for my $i (0 .. $#IDS) {
     my $m  = $META{$id};
     local $CTX{mode} = 'page';
     my $main = chapter_hero($id) . "\n" . $RENDERED{$id} . "\n" . chapter_nav($i);
-    spew("$ROOT/$id.html", page_html(
+    spew("$OUT/$id.html", page_html(
         title => "$m->{num} $m->{subtitle} | $BOOK",
         desc  => "$m->{title} ― $m->{subtitle}。$BOOK_SUB",
         cur   => $id,
@@ -1001,7 +1004,7 @@ sub cover_top {
 {
     local $CTX{mode} = 'page';
     my $body = render_body('index');
-    spew("$ROOT/index.html", page_html(
+    spew("$OUT/index.html", page_html(
         title => "$BOOK ― $BOOK_SUB",
         desc  => $META{index}{lead} // $BOOK_SUB,
         cur   => '',
@@ -1020,7 +1023,7 @@ sub cover_top {
     for my $id (@IDS) {
         $main .= qq{<article id="$id" class="scroll-mt-14 border-t-4 border-gray-900 pt-2 mt-24">} . chapter_hero($id) . "\n" . $RENDERED{$id} . '</article>';
     }
-    spew("$ROOT/all.html", page_html(
+    spew("$OUT/all.html", page_html(
         title => "【全章一気読み版】$BOOK ― $BOOK_SUB",
         desc  => $META{index}{lead} // $BOOK_SUB,
         cur   => '',

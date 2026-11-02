@@ -4,31 +4,50 @@
 
 ## 読み方
 
-- `index.html` をブラウザで開くと、表紙と目次が表示されます（スマートフォン最適化済み）。
-- `all.html` は全章を1ファイルにまとめた一気読み版です（オフライン閲覧や印刷向け）。
+- `public/index.html` をブラウザで開くと、表紙と目次が表示されます（スマートフォン最適化済み）。
+- `public/all.html` は全章を1ファイルにまとめた一気読み版です（オフライン閲覧や印刷向け）。
 - 表示には Tailwind CSS（CDN）と Google Fonts を読み込むため、インターネット接続が必要です。
 
 ## 構成
 
-| ファイル | 内容 |
+| パス | 内容 |
 | --- | --- |
-| `index.html` | 表紙・本書の読み方・目次 |
-| `ch00.html` | 序章　黒字倒産と、簿記を学ぶ意味 |
-| `ch01.html`〜`ch19.html` | 第1章〜第19章（簿記の基本原理 → 諸取引 → 決算） |
-| `ch20.html` | 終章　2級・1級、そして実務へ |
-| `apx-a.html` | 付録A　勘定科目・完全辞典 |
-| `apx-b.html` | 付録B　試験攻略マニュアル |
-| `apx-c.html` | 付録C　仕訳道場（第1問対策・55問） |
-| `all.html` | 全章一気読み版 |
+| `public/` | **公開するファイル（HTMLのみ）**。`build.pl` が自動生成する |
+| `public/index.html` | 表紙・本書の読み方・目次 |
+| `public/ch00.html` | 序章　黒字倒産と、簿記を学ぶ意味 |
+| `public/ch01.html`〜`ch19.html` | 第1章〜第19章（簿記の基本原理 → 諸取引 → 決算） |
+| `public/ch20.html` | 終章　2級・1級、そして実務へ |
+| `public/apx-a.html` | 付録A　勘定科目・完全辞典 |
+| `public/apx-b.html` | 付録B　試験攻略マニュアル |
+| `public/apx-c.html` | 付録C　仕訳道場（第1問対策・55問） |
+| `public/all.html` | 全章一気読み版 |
+| `_src/` | 本文の原稿（公開しない） |
+| `build.pl` | HTMLを生成するスクリプト（公開しない） |
 
 出題範囲は、2026年度（2027年3月まで）の試験に適用される出題区分表（2022年度適用版）を網羅し、2027年4月以降の改定点（2025年12月公表の暫定版）も併記しています。
 
+## 公開（Cloudflare Pages）
+
+サイトとして配信するのは `public/` の中身だけです。Cloudflare Pages のビルド設定は次のとおりにします。
+
+| 項目 | 設定値 |
+| --- | --- |
+| Production branch | `main` |
+| Framework preset | `None` |
+| Build command | 空欄 |
+| Build output directory | `public` |
+
+`main` に push すると自動で再デプロイされます。
+
 ## 編集・再生成
 
-本文は `_src/*.txt`（独自の軽量マークアップ）に書かれており、`build.pl` が Tailwind のクラス付き HTML を生成します。追加モジュール不要の Perl 5 で動きます（Git Bash 同梱の Perl で可）。
+本文は `_src/*.txt`（独自の軽量マークアップ）に書かれており、`build.pl` が Tailwind のクラス付き HTML を `public/` に生成します。追加モジュール不要の Perl 5 で動きます（Git Bash 同梱の Perl で可）。
 
 ```sh
 perl build.pl
+git add -A
+git commit -m "変更内容"
+git push
 ```
 
 - 記法の一覧は `build.pl` 冒頭のコメントを参照してください。
