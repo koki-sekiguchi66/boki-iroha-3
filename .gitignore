@@ -1,0 +1,8 @@
+# OS が生成するファイル
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# エディタ
+.vscode/
+*.swp
