@@ -20,7 +20,7 @@
 | `public/ch20.html` | 終章　2級・1級、そして実務へ |
 | `public/apx-a.html` | 付録A　勘定科目・完全辞典 |
 | `public/apx-b.html` | 付録B　試験攻略マニュアル |
-| `public/apx-c.html` | 付録C　仕訳道場（第1問対策・55問） |
+| `public/apx-c.html` | 付録C　仕訳道場（第1問対策・64問） |
 | `public/all.html` | 全章一気読み版 |
 | `_src/` | 本文の原稿（公開しない） |
 | `build.pl` | HTMLを生成するスクリプト（公開しない） |
