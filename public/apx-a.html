@@ -26,6 +26,7 @@
 <style>
   html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   summary { list-style: none; }
+  .kb-ghost { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; transform: translate(-50%, -50%); opacity: .95; }
   summary::-webkit-details-marker { display: none; }
   table { font-variant-numeric: tabular-nums; }
   @media print {
@@ -101,6 +102,264 @@
       if (start) start.className = 'rounded-md border border-white/30 px-5 py-3 font-bold text-white transition hover:bg-white/10';
     }
   } catch (e) {}
+})();
+
+// ---- インタラクティブ演習（分類・仕訳） ----
+(() => {
+  if (!document.querySelector('[data-kb]')) return;
+  const SEL = ['ring-2', 'ring-indigo-500', 'ring-offset-1'];
+  const OVER = ['ring-2', 'ring-indigo-400'];
+  const OK = ['!border-emerald-500', '!bg-emerald-50'];    // 元の枠・背景色より優先させる
+  const NG = ['!border-red-500', '!bg-red-50'];
+  const num = (s) => {
+    s = String(s == null ? '' : s)
+      .replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xfee0))
+      .replace(/[,，\s円¥￥]/g, '');
+    return s === '' ? null : Number(s);
+  };
+  const widgetOf = (el) => (el && el.closest ? el.closest('[data-kb]') : null);
+  let selected = null;
+  let drag = null;
+  let suppress = false;
+
+  const select = (chip) => {
+    if (selected) selected.classList.remove(...SEL);
+    selected = chip && chip !== selected ? chip : null;
+    if (selected) selected.classList.add(...SEL);
+  };
+  const result = (w, text, ok) => {
+    const r = w.querySelector('.kb-result');
+    r.textContent = text;
+    r.className = 'kb-result text-sm font-bold ' + (ok === true ? 'text-emerald-600' : ok === false ? 'text-red-600' : 'text-gray-500');
+  };
+  const clearMarks = (w) => {
+    w.querySelectorAll('.kb-chip, .kb-slot, .kb-amt').forEach((el) => el.classList.remove(...OK, ...NG));
+    w.querySelectorAll('.kb-mark').forEach((m) => m.remove());
+    w.querySelectorAll('.kb-jres').forEach((r) => (r.textContent = ''));
+    result(w, '', null);
+    delete w.dataset.ok;
+  };
+  const setSlot = (slot, acct) => {
+    slot.dataset.acct = acct || '';
+    slot.textContent = acct || '勘定科目';
+    slot.classList.toggle('text-gray-400', !acct);
+    slot.classList.toggle('border-dashed', !acct);
+    slot.classList.toggle('text-gray-900', !!acct);
+    slot.classList.toggle('font-bold', !!acct);
+  };
+  const place = (chip, target) => {
+    const w = widgetOf(chip);
+    if (!w || widgetOf(target) !== w) return false;
+    if (w.dataset.kb === 'sort') {
+      const zone = target.closest('[data-zone]');
+      if (!zone) return false;
+      (zone.querySelector('.kb-items') || zone).appendChild(chip);
+    } else {
+      const slot = target.closest('.kb-slot');
+      if (!slot) return false;
+      setSlot(slot, chip.dataset.acct);
+    }
+    clearMarks(w);
+    return true;
+  };
+  const rows = (entry, side) => [...entry.querySelectorAll('.kb-row[data-side="' + side + '"]')];
+
+  const check = (w) => {
+    clearMarks(w);
+    let ok = true;
+    if (w.dataset.kb === 'sort') {
+      const chips = [...w.querySelectorAll('.kb-chip')];
+      let n = 0;
+      chips.forEach((c) => {
+        const good = c.closest('[data-zone]').dataset.zone === c.dataset.ans;
+        c.classList.add(...(good ? OK : NG));
+        if (good) n++;
+        else {
+          const m = document.createElement('span');
+          m.className = 'kb-mark ml-1 text-[11px] font-bold text-red-600';
+          m.textContent = '→ ' + c.dataset.ans;
+          c.appendChild(m);
+        }
+      });
+      ok = n === chips.length;
+      result(w, ok ? '全問正解！' : n + ' / ' + chips.length + ' 正解。赤い項目を見直そう', ok);
+    } else {
+      const ans = JSON.parse(w.dataset.answer);
+      w.querySelectorAll('.kb-entry').forEach((entry, j) => {
+        let good = true;
+        ['d', 'c'].forEach((side) => {
+          const left = ans[j][side].map((e) => e[0] + '|' + e[1]);
+          rows(entry, side).forEach((r) => {
+            const slot = r.querySelector('.kb-slot');
+            const amt = r.querySelector('.kb-amt');
+            if (!slot.dataset.acct && !amt.value.trim()) return;
+            const i = left.indexOf(slot.dataset.acct + '|' + num(amt.value));
+            if (i >= 0) left.splice(i, 1);
+            else good = false;
+            [slot, amt].forEach((el) => el.classList.add(...(i >= 0 ? OK : NG)));
+          });
+          if (left.length) good = false;
+        });
+        const r = entry.querySelector('.kb-jres');
+        r.textContent = good ? '✓ 正解' : '✗ 見直そう';
+        r.className = 'kb-jres text-xs font-bold ' + (good ? 'text-emerald-600' : 'text-red-600');
+        if (!good) ok = false;
+      });
+      result(w, ok ? '全問正解！' : '赤い欄を見直そう（足りない行がある場合もある）', ok);
+    }
+    w.dataset.ok = ok ? '1' : '0';
+  };
+
+  const reveal = (w) => {
+    if (w.dataset.kb === 'sort') {
+      w.querySelectorAll('.kb-chip').forEach((c) => {
+        const zone = w.querySelector('[data-zone="' + CSS.escape(c.dataset.ans) + '"]');
+        if (zone) (zone.querySelector('.kb-items') || zone).appendChild(c);
+      });
+    } else {
+      const ans = JSON.parse(w.dataset.answer);
+      w.querySelectorAll('.kb-entry').forEach((entry, j) => {
+        ['d', 'c'].forEach((side) => {
+          rows(entry, side).forEach((r, i) => {
+            const e = ans[j][side][i];
+            setSlot(r.querySelector('.kb-slot'), e ? e[0] : '');
+            r.querySelector('.kb-amt').value = e ? Number(e[1]).toLocaleString('ja-JP') : '';
+          });
+        });
+      });
+    }
+    clearMarks(w);
+    result(w, '正解を表示しました', null);
+  };
+
+  const reset = (w) => {
+    if (w.dataset.kb === 'sort') {
+      const pool = w.querySelector('.kb-pool');
+      [...w.querySelectorAll('.kb-chip')].sort((a, b) => a.dataset.i - b.dataset.i).forEach((c) => pool.appendChild(c));
+    } else {
+      w.querySelectorAll('.kb-slot').forEach((s) => setSlot(s, ''));
+      w.querySelectorAll('.kb-amt').forEach((i) => (i.value = ''));
+    }
+    clearMarks(w);
+  };
+
+  document.addEventListener('click', (e) => {
+    if (suppress) return;
+    const t = e.target;
+    const w = widgetOf(t);
+    if (!w) return;
+    if (t.closest('.kb-check')) return check(w);
+    if (t.closest('.kb-reveal')) return reveal(w);
+    if (t.closest('.kb-reset')) return reset(w);
+    const chip = t.closest('.kb-chip');
+    if (chip) return select(chip);
+    const slot = t.closest('.kb-slot');
+    if (slot) {
+      if (selected && widgetOf(selected) === w) { place(selected, slot); select(null); }
+      else if (slot.dataset.acct) { setSlot(slot, ''); clearMarks(w); }
+      return;
+    }
+    const zone = t.closest('[data-zone]');
+    if (zone && selected && widgetOf(selected) === w) { place(selected, zone); select(null); }
+  });
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-zone][role="button"]')) {
+      e.preventDefault();
+      e.target.click();
+    }
+  });
+
+  // ドラッグ（マウス・タッチ共通。HTML5のドラッグはスマホで動かないためポインターで実装）
+  document.addEventListener('pointerdown', (e) => {
+    const chip = e.target.closest && e.target.closest('.kb-chip');
+    if (!chip || e.button > 0) return;
+    drag = { chip, x: e.clientX, y: e.clientY, ghost: null, over: null };
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    if (!drag.ghost) {
+      if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 6) return;
+      const g = drag.chip.cloneNode(true);
+      g.classList.remove(...SEL);
+      g.classList.add('kb-ghost', 'shadow-lg');
+      document.body.appendChild(g);
+      drag.ghost = g;
+      select(null);
+    }
+    e.preventDefault();
+    drag.ghost.style.left = e.clientX + 'px';
+    drag.ghost.style.top = e.clientY + 'px';
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    let over = el && el.closest ? el.closest('.kb-slot') || el.closest('[data-zone]') : null;
+    if (over && widgetOf(over) !== widgetOf(drag.chip)) over = null;
+    if (over !== drag.over) {
+      if (drag.over) drag.over.classList.remove(...OVER);
+      drag.over = over;
+      if (over) over.classList.add(...OVER);
+    }
+  }, { passive: false });
+  const endDrag = () => {
+    if (!drag) return;
+    const d = drag;
+    drag = null;
+    if (!d.ghost) return;
+    d.ghost.remove();
+    if (d.over) { d.over.classList.remove(...OVER); place(d.chip, d.over); }
+    suppress = true;
+    setTimeout(() => (suppress = false), 0);
+  };
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', () => {
+    if (drag && drag.ghost) drag.ghost.remove();
+    if (drag && drag.over) drag.over.classList.remove(...OVER);
+    drag = null;
+  });
+
+  // 自己テスト（URL に ?selftest を付けたときだけ動く）
+  if (/[?&]selftest/.test(location.search)) {
+    setTimeout(() => {
+      const ws = [...document.querySelectorAll('[data-kb]')];
+      let pass = 0;
+      const fails = [];
+      const fire = (type, x, y, el) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, button: 0 }));
+      ws.forEach((w, i) => {
+        reset(w);
+        const chip = w.dataset.kb === 'sort'
+          ? w.querySelector('.kb-pool .kb-chip')
+          : [...w.querySelectorAll('.kb-pool .kb-chip')].find((c) => c.dataset.acct === JSON.parse(w.dataset.answer)[0].d[0][0]);
+        const target = w.dataset.kb === 'sort' ? w.querySelector('[data-zone="' + CSS.escape(chip.dataset.ans) + '"]') : w.querySelector('.kb-row[data-side="d"] .kb-slot');
+        target.scrollIntoView({ block: 'center' });
+        const a = chip.getBoundingClientRect();
+        const b = target.getBoundingClientRect();
+        fire('pointerdown', a.x + a.width / 2, a.y + a.height / 2, chip);
+        fire('pointermove', a.x + a.width / 2 + 12, a.y + a.height / 2 + 12, document);
+        fire('pointermove', b.x + b.width / 2, b.y + b.height / 2, document);
+        fire('pointerup', b.x + b.width / 2, b.y + b.height / 2, document);
+        const dragged = w.dataset.kb === 'sort' ? chip.closest('[data-zone]') === target : target.dataset.acct === chip.dataset.acct;
+        reveal(w);
+        check(w);
+        const right = w.dataset.ok === '1';
+        if (w.dataset.kb === 'sort') {
+          const pool = w.querySelector('.kb-pool');
+          pool.appendChild(w.querySelector('.kb-chip'));
+        } else {
+          const amt = w.querySelector('.kb-amt');
+          amt.value = amt.value + '1';
+        }
+        check(w);
+        const wrongDetected = w.dataset.ok === '0';
+        if (dragged && right && wrongDetected) pass++;
+        else fails.push('#' + i + (dragged ? '' : ' drag') + (right ? '' : ' answer') + (wrongDetected ? '' : ' wrong-undetected'));
+        reset(w);
+      });
+      const b = document.createElement('div');
+      b.id = 'kb-selftest';
+      b.textContent = 'SELFTEST ' + (fails.length ? 'NG' : 'OK') + ' : ' + pass + ' / ' + ws.length + (fails.length ? ' ' + fails.join(', ') : '');
+      b.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99;padding:12px;font:bold 16px sans-serif;color:#fff;background:' + (fails.length ? '#dc2626' : '#059669');
+      document.body.appendChild(b);
+      window.scrollTo(0, 0);
+    }, 400);
+  }
 })();
 </script>
 </body>

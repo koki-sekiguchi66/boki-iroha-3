@@ -31,12 +31,19 @@
 #      boxes    … 「H 左見出し | 右見出し」「L|R 色 数値 ラベル」（色: a l e x r p s z k d）
 #      steps / kpi / timeline … 「項目 | 説明 | 補足」
 #      toc      … 目次（表紙用）
+#      sort     … ドラッグで分類する演習。「@cats 分類1 | 分類2 …」と「項目 => 正しい分類」を並べる
+#
+#  ■ 演習の自動生成
+#    example / problem の answer に journal があれば、仕訳の入力欄（ドラッグ＋金額入力＋答え合わせ）を
+#    自動で付ける。付けたくない問題は、問題文に <!-- notry --> の行を入れる。
+#    ページの URL に ?selftest を付けて開くと、全演習の自己テスト結果が画面上部に表示される。
 # ======================================================================
 use strict;
 use warnings;
 use utf8;
 use open qw(:std :encoding(UTF-8));
 use FindBin qw($Bin);
+use JSON::PP;
 
 my $ROOT     = $Bin;
 my $SRC      = "$ROOT/_src";
@@ -143,7 +150,7 @@ sub cells {
 }
 
 # ---------------------------------------------------------------- parse
-my %RAW       = map { $_ => 1 } qw(journal taccount table boxes steps kpi timeline toc);
+my %RAW       = map { $_ => 1 } qw(journal taccount table boxes steps kpi timeline toc sort);
 my %CONTAINER = map { $_ => 1 } qw(mystery theory danger cfo answer exam next solve scene case example problem quiz summary point formula tgrid note);
 
 sub parse {
@@ -362,14 +369,14 @@ sub r_box {
     if ($name eq 'example') {
         return qq{<section class="my-8 rounded-lg border border-gray-300 bg-white p-5 shadow-sm sm:p-6">}
              . qq{<p class="mb-3 flex flex-wrap items-baseline gap-2"><span class="rounded bg-gray-900 px-2 py-0.5 text-xs font-bold text-white">例題</span><span class="font-bold leading-snug text-gray-900">} . inl($a) . '</span></p>'
-             . inner($k, $name) . '</section>';
+             . with_try($k, $name, $n->{line}) . '</section>';
     }
     if ($name eq 'problem') {
         $CTX{qn}++;
         my $no = $CTX{qn};
         return qq{<section class="rounded-lg border border-gray-300 bg-white p-5 shadow-sm sm:p-6">}
              . qq{<p class="mb-3 flex flex-wrap items-baseline gap-2"><span class="rounded bg-amber-500 px-2 py-0.5 text-xs font-black text-white">問$no</span><span class="font-bold leading-snug text-gray-900">} . inl($a) . '</span></p>'
-             . inner($k, $name) . '</section>';
+             . with_try($k, $name, $n->{line}) . '</section>';
     }
     if ($name eq 'quiz') {
         $CTX{qn} = 0;
@@ -419,8 +426,198 @@ sub r_raw {
         kpi      => \&r_kpi,
         timeline => \&r_timeline,
         toc      => \&r_toc,
+        sort     => \&r_sort,
     );
     return $f{ $n->{name} }->($n->{arg}, $n->{lines}, $n->{line});
+}
+
+# ---------------------------------------------------------------- render: interactive exercises
+# ::sort … ドラッグで分類する問題（"@cats 分類1 | 分類2"、"項目 => 正しい分類"）
+# 例題・確認問題の解答に仕訳があれば、仕訳の入力欄を自動で付ける（問題文に <!-- notry --> で無効化）
+my %CATSTYLE = (
+    '資産'   => ['border-blue-300 bg-blue-50',       'text-blue-700'],
+    '負債'   => ['border-rose-300 bg-rose-50',       'text-rose-700'],
+    '純資産' => ['border-emerald-300 bg-emerald-50', 'text-emerald-700'],
+    '収益'   => ['border-violet-300 bg-violet-50',   'text-violet-700'],
+    '費用'   => ['border-amber-300 bg-amber-50',     'text-amber-700'],
+);
+my $KB_SAFE = '<span class="hidden ring-2 ring-indigo-500 ring-indigo-400 ring-offset-1 !border-emerald-500 !bg-emerald-50 !border-red-500 !bg-red-50 text-emerald-600 text-red-600 shadow-lg"></span>';
+my $KB_CHIP = 'kb-chip touch-none select-none max-w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-left text-sm font-bold leading-snug text-gray-800 shadow-sm transition hover:border-indigo-400';
+my $KB_BTN  = 'rounded-md px-3 py-1.5 text-sm font-bold transition';
+
+sub hval {
+    my ($s, $seed) = @_;
+    my $h = ($seed * 2654435761) % 4294967296;
+    $h = ($h * 31 + ord($_)) % 4294967296 for split //, $s;
+    return $h;
+}
+
+sub dshuffle {    # 決定的なシャッフル（ビルドのたびに並びが変わらない）
+    my ($seed, @a) = @_;
+    return sort { hval($a, $seed) <=> hval($b, $seed) || $a cmp $b } @a;
+}
+
+sub kb_buttons {
+    return qq{<div class="mt-3 flex flex-wrap items-center gap-2">}
+         . qq{<button type="button" class="kb-check $KB_BTN bg-indigo-600 text-white hover:bg-indigo-500">答え合わせ</button>}
+         . qq{<button type="button" class="kb-reveal $KB_BTN border border-gray-300 bg-white text-gray-700 hover:bg-gray-50">正解を表示</button>}
+         . qq{<button type="button" class="kb-reset $KB_BTN text-gray-500 hover:text-gray-800">リセット</button>}
+         . qq{<span class="kb-result text-sm font-bold" aria-live="polite"></span></div>};
+}
+
+sub r_sort {
+    my ($arg, $lines, $ln) = @_;
+    my (@cats, @items);
+    for my $l (@$lines) {
+        next unless $l =~ /\S/;
+        if ($l =~ /^\@cats\s+(.*)$/) { @cats = map { trim($_) } split /\|/, $1; next; }
+        if ($l =~ /^(.*?\S)\s*=>\s*(\S.*?)\s*$/) { push @items, [$1, $2]; next; }
+        push @WARN, "[$CUR:$ln] sort: 解釈できない行「$l」";
+    }
+    my %okcat = map { $_ => 1 } @cats;
+    for my $it (@items) {
+        push @WARN, "[$CUR:$ln] sort: 分類先にない答え「$it->[1]」" unless $okcat{ $it->[1] };
+    }
+    $NCHK{sort}++ if ($CTX{mode} // '') ne 'all';
+    my %ans = map { $_->[0] => $_->[1] } @items;
+    my $i = 0;
+    my $chips = join '', map {
+        $i++;
+        qq{<button type="button" class="$KB_CHIP" data-i="$i" data-ans="} . esc($ans{$_}) . '">' . inl($_) . '</button>';
+    } dshuffle($ln, map { $_->[0] } @items);
+    my $zones = join '', map {
+        my ($box, $lab) = @{ $CATSTYLE{$_} // ['border-slate-300 bg-slate-50', 'text-slate-600'] };
+        qq{<div class="kb-zone min-h-[4.5rem] rounded-md border-2 border-dashed $box p-2 transition" data-zone="} . esc($_) . qq{" role="button" tabindex="0">}
+          . qq{<p class="mb-1.5 text-xs font-bold $lab">} . inl($_) . '</p><div class="kb-items flex flex-wrap gap-1.5"></div></div>';
+    } @cats;
+    my $cols = (@cats <= 2 || @cats == 4) ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3';
+    return qq{<div class="kb-sort my-5 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 sm:p-4" data-kb="sort">$KB_SAFE}
+         . qq{<p class="mb-1 text-[11px] font-bold tracking-[0.25em] text-indigo-600">TRY ― ドラッグして分類</p>}
+         . qq{<p class="mb-3 text-xs leading-relaxed text-gray-600">} . ($arg ne '' ? inl($arg) . '<br>' : '') . 'ドラッグで分類先へ移すか、タップしてから分類先をタップしよう。</p>'
+         . qq{<div class="kb-pool flex min-h-[3rem] flex-wrap gap-1.5 rounded-md border-2 border-dashed border-indigo-200 bg-white p-2" data-zone="pool" role="button" tabindex="0">$chips</div>}
+         . qq{<div class="mt-3 grid $cols gap-2">$zones</div>}
+         . kb_buttons() . '</div>';
+}
+
+# 仕訳の入力欄に並べる「まぎらわしい選択肢」
+my @CONF = (
+    [qw(現金 当座預金 普通預金 小口現金 定期預金)],
+    [qw(売掛金 未収入金 クレジット売掛金 受取手形 電子記録債権 受取商品券)],
+    [qw(買掛金 未払金 支払手形 電子記録債務)],
+    [qw(前払金 前払費用 仮払金 立替金)],
+    [qw(前受金 前受収益 仮受金 預り金)],
+    [qw(貸付金 手形貸付金 役員貸付金 従業員貸付金)],
+    [qw(借入金 手形借入金 役員借入金 当座借越)],
+    [qw(仕入 売上原価 繰越商品 発送費)],
+    [qw(売上 受取手数料 雑益 償却債権取立益)],
+    [qw(支払手数料 支払利息 雑損 雑費)],
+    [qw(租税公課 仮払法人税等 未払法人税等 通信費)],
+    [qw(給料 法定福利費 所得税預り金 社会保険料預り金 住民税預り金 従業員預り金)],
+    [qw(減価償却費 減価償却累計額 固定資産売却損 固定資産売却益 修繕費)],
+    [qw(備品 建物 車両運搬具 土地)],
+    [qw(貸倒損失 貸倒引当金 貸倒引当金繰入 貸倒引当金戻入)],
+    [qw(仮受消費税 仮払消費税 未払消費税)],
+    [qw(資本金 繰越利益剰余金 利益準備金 未払配当金)],
+    [qw(旅費交通費 消耗品費 通信費 雑費)],
+    [qw(支払家賃 支払地代 保険料 修繕費)],
+    [qw(受取家賃 受取地代 受取利息)],
+);
+my @DEFPOOL = qw(現金 普通預金 売掛金 買掛金 未払金 仮払金 仮受金 雑損 支払手数料 雑益);
+
+sub distractors {
+    my ($seed, $n, @ans) = @_;
+    my %a = map { $_ => 1 } @ans;
+    my %cand;
+    for my $acc (@ans) {
+        for my $g (@CONF) {
+            next unless grep { index($acc, $_) >= 0 } @$g;
+            $cand{$_} = 1 for grep { !$a{$_} } @$g;
+        }
+    }
+    my @pick = dshuffle($seed, keys %cand);
+    @pick = @pick[0 .. $n - 1] if @pick > $n;
+    for my $d (dshuffle($seed + 1, @DEFPOOL)) {
+        last if @pick >= $n;
+        push @pick, $d unless $a{$d} || grep { $_ eq $d } @pick;
+    }
+    return @pick;
+}
+
+sub jlabel {    # 仕訳の見出しのうち、答えのヒントにならない部分だけを使う
+    my ($cap, $i) = @_;
+    my ($f) = split /[\s：:（、。]/, trim($cap // '');
+    $f //= '';
+    return $f if $f =~ /^(?:\(\d+\)|[①-⑳]|\d+\.|\d+月\d+日|翌期\d+月\d+日|期首|期中|期末|決算日|翌期首|.{1,5}時)$/;
+    return "仕訳$i";
+}
+
+sub jr_widget {
+    my ($kids, $seed) = @_;
+    return '' if grep { $_->{t} eq 'html' && $_->{text} =~ /notry/ } @$kids;
+    my @js;
+    for my $ans (grep { $_->{t} eq 'box' && $_->{name} eq 'answer' } @$kids) {
+        for my $jn (grep { $_->{t} eq 'raw' && $_->{name} eq 'journal' } @{ $ans->{kids} }) {
+            my (@d, @c);
+            my $bad = 0;
+            for my $l (@{ $jn->{lines} }) {
+                next if $l =~ /^\s*$/;
+                if ($l !~ /\|/) { $bad = 1; last; }
+                my ($L, $R) = split /\s*\|\s*/, $l, 2;
+                for my $pair ([[side($L)], \@d], [[side($R // '')], \@c]) {
+                    my ($e, $arr) = @$pair;
+                    next if $e->[0] eq '' && $e->[1] eq '';
+                    my $v = amt($e->[1]);
+                    if ($e->[0] eq '' || !defined $v) { $bad = 1; next; }
+                    push @$arr, [$e->[0], 0 + $v];
+                }
+            }
+            next if $bad || !@d || !@c;
+            push @js, { l => jlabel($jn->{arg}, scalar(@js) + 1), d => \@d, c => \@c };
+        }
+    }
+    return '' if !@js || @js > 8;
+    $NCHK{try}++ if ($CTX{mode} // '') ne 'all';
+    my (%seen, @acc);
+    for my $j (@js) {
+        for my $e (@{ $j->{d} }, @{ $j->{c} }) { push @acc, $e->[0] unless $seen{ $e->[0] }++; }
+    }
+    my $nd   = @acc <= 2 ? 5 : @acc <= 4 ? 4 : 3;
+    my $chips = join '', map { qq{<button type="button" class="$KB_CHIP" data-acct="} . esc($_) . '">' . esc($_) . '</button>' }
+                dshuffle($seed, @acc, distractors($seed, $nd, @acc));
+    my ($entries, $k) = ('', 0);
+    for my $j (@js) {
+        my $rows = (@{ $j->{d} } > @{ $j->{c} } ? scalar @{ $j->{d} } : scalar @{ $j->{c} }) + 1;
+        $rows = 2 if $rows < 2;
+        $rows = 5 if $rows > 5;
+        my $col = sub {
+            my ($s, $label, $cls) = @_;
+            my $h = qq{<div><p class="mb-1 text-[11px] font-bold $cls">$label</p>};
+            $h .= qq{<div class="kb-row mb-1 flex items-stretch gap-1.5" data-side="$s">}
+                . qq{<button type="button" class="kb-slot min-w-0 flex-1 truncate rounded border border-dashed border-gray-300 bg-gray-50 px-2 py-1.5 text-left text-sm text-gray-400" data-acct="">勘定科目</button>}
+                . qq{<input type="text" inputmode="numeric" autocomplete="off" aria-label="${label}の金額" placeholder="金額" class="kb-amt w-28 flex-none rounded border border-gray-300 bg-white px-2 py-1.5 text-right text-sm tabular-nums">}
+                . '</div>' for 1 .. $rows;
+            return $h . '</div>';
+        };
+        $entries .= qq{<div class="kb-entry mt-3 rounded-md border border-gray-200 bg-white p-2.5" data-j="$k">}
+                  . qq{<div class="mb-1.5 flex items-center justify-between gap-2"><span class="text-xs font-bold text-gray-500">} . esc($j->{l}) . qq{</span><span class="kb-jres text-xs font-bold"></span></div>}
+                  . qq{<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">} . $col->('d', '借方', 'text-blue-700') . $col->('c', '貸方', 'text-rose-700') . '</div></div>';
+        $k++;
+    }
+    my $data = esc(JSON::PP->new->canonical(1)->encode([ map { { d => $_->{d}, c => $_->{c} } } @js ]));
+    return qq{<div class="kb-jr my-5 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 sm:p-4" data-kb="journal" data-answer="$data">$KB_SAFE}
+         . qq{<p class="mb-1 text-[11px] font-bold tracking-[0.25em] text-indigo-600">TRY ― 仕訳を入力して答え合わせ</p>}
+         . qq{<p class="mb-2 text-xs leading-relaxed text-gray-600">勘定科目をドラッグで記入欄へ（またはタップしてから記入欄をタップ）。金額も入力しよう。記入済みの欄をタップすると消せる。</p>}
+         . qq{<div class="kb-pool flex flex-wrap gap-1.5" data-zone="pool">$chips</div>}
+         . $entries . kb_buttons() . '</div>';
+}
+
+sub with_try {    # 問題文 → 入力欄 → 解答（折りたたみ）の順に並べる
+    my ($k, $name, $seed) = @_;
+    my $w = jr_widget($k, $seed);
+    return inner($k, $name) if $w eq '';
+    my @pre = grep { !($_->{t} eq 'box' && $_->{name} eq 'answer') } @$k;
+    my @ans = grep { $_->{t} eq 'box' && $_->{name} eq 'answer' } @$k;
+    return '<div class="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0">' . rn(\@pre, $name) . $w . rn(\@ans, $name) . '</div>';
 }
 
 sub caption_journal {
@@ -815,6 +1012,7 @@ sub head_html {
 <style>
   html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   summary { list-style: none; }
+  .kb-ghost { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; transform: translate(-50%, -50%); opacity: .95; }
   summary::-webkit-details-marker { display: none; }
   table { font-variant-numeric: tabular-nums; }
   @media print {
@@ -893,6 +1091,264 @@ sub script_html {
       if (start) start.className = 'rounded-md border border-white/30 px-5 py-3 font-bold text-white transition hover:bg-white/10';
     }
   } catch (e) {}
+})();
+
+// ---- インタラクティブ演習（分類・仕訳） ----
+(() => {
+  if (!document.querySelector('[data-kb]')) return;
+  const SEL = ['ring-2', 'ring-indigo-500', 'ring-offset-1'];
+  const OVER = ['ring-2', 'ring-indigo-400'];
+  const OK = ['!border-emerald-500', '!bg-emerald-50'];    // 元の枠・背景色より優先させる
+  const NG = ['!border-red-500', '!bg-red-50'];
+  const num = (s) => {
+    s = String(s == null ? '' : s)
+      .replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xfee0))
+      .replace(/[,，\s円¥￥]/g, '');
+    return s === '' ? null : Number(s);
+  };
+  const widgetOf = (el) => (el && el.closest ? el.closest('[data-kb]') : null);
+  let selected = null;
+  let drag = null;
+  let suppress = false;
+
+  const select = (chip) => {
+    if (selected) selected.classList.remove(...SEL);
+    selected = chip && chip !== selected ? chip : null;
+    if (selected) selected.classList.add(...SEL);
+  };
+  const result = (w, text, ok) => {
+    const r = w.querySelector('.kb-result');
+    r.textContent = text;
+    r.className = 'kb-result text-sm font-bold ' + (ok === true ? 'text-emerald-600' : ok === false ? 'text-red-600' : 'text-gray-500');
+  };
+  const clearMarks = (w) => {
+    w.querySelectorAll('.kb-chip, .kb-slot, .kb-amt').forEach((el) => el.classList.remove(...OK, ...NG));
+    w.querySelectorAll('.kb-mark').forEach((m) => m.remove());
+    w.querySelectorAll('.kb-jres').forEach((r) => (r.textContent = ''));
+    result(w, '', null);
+    delete w.dataset.ok;
+  };
+  const setSlot = (slot, acct) => {
+    slot.dataset.acct = acct || '';
+    slot.textContent = acct || '勘定科目';
+    slot.classList.toggle('text-gray-400', !acct);
+    slot.classList.toggle('border-dashed', !acct);
+    slot.classList.toggle('text-gray-900', !!acct);
+    slot.classList.toggle('font-bold', !!acct);
+  };
+  const place = (chip, target) => {
+    const w = widgetOf(chip);
+    if (!w || widgetOf(target) !== w) return false;
+    if (w.dataset.kb === 'sort') {
+      const zone = target.closest('[data-zone]');
+      if (!zone) return false;
+      (zone.querySelector('.kb-items') || zone).appendChild(chip);
+    } else {
+      const slot = target.closest('.kb-slot');
+      if (!slot) return false;
+      setSlot(slot, chip.dataset.acct);
+    }
+    clearMarks(w);
+    return true;
+  };
+  const rows = (entry, side) => [...entry.querySelectorAll('.kb-row[data-side="' + side + '"]')];
+
+  const check = (w) => {
+    clearMarks(w);
+    let ok = true;
+    if (w.dataset.kb === 'sort') {
+      const chips = [...w.querySelectorAll('.kb-chip')];
+      let n = 0;
+      chips.forEach((c) => {
+        const good = c.closest('[data-zone]').dataset.zone === c.dataset.ans;
+        c.classList.add(...(good ? OK : NG));
+        if (good) n++;
+        else {
+          const m = document.createElement('span');
+          m.className = 'kb-mark ml-1 text-[11px] font-bold text-red-600';
+          m.textContent = '→ ' + c.dataset.ans;
+          c.appendChild(m);
+        }
+      });
+      ok = n === chips.length;
+      result(w, ok ? '全問正解！' : n + ' / ' + chips.length + ' 正解。赤い項目を見直そう', ok);
+    } else {
+      const ans = JSON.parse(w.dataset.answer);
+      w.querySelectorAll('.kb-entry').forEach((entry, j) => {
+        let good = true;
+        ['d', 'c'].forEach((side) => {
+          const left = ans[j][side].map((e) => e[0] + '|' + e[1]);
+          rows(entry, side).forEach((r) => {
+            const slot = r.querySelector('.kb-slot');
+            const amt = r.querySelector('.kb-amt');
+            if (!slot.dataset.acct && !amt.value.trim()) return;
+            const i = left.indexOf(slot.dataset.acct + '|' + num(amt.value));
+            if (i >= 0) left.splice(i, 1);
+            else good = false;
+            [slot, amt].forEach((el) => el.classList.add(...(i >= 0 ? OK : NG)));
+          });
+          if (left.length) good = false;
+        });
+        const r = entry.querySelector('.kb-jres');
+        r.textContent = good ? '✓ 正解' : '✗ 見直そう';
+        r.className = 'kb-jres text-xs font-bold ' + (good ? 'text-emerald-600' : 'text-red-600');
+        if (!good) ok = false;
+      });
+      result(w, ok ? '全問正解！' : '赤い欄を見直そう（足りない行がある場合もある）', ok);
+    }
+    w.dataset.ok = ok ? '1' : '0';
+  };
+
+  const reveal = (w) => {
+    if (w.dataset.kb === 'sort') {
+      w.querySelectorAll('.kb-chip').forEach((c) => {
+        const zone = w.querySelector('[data-zone="' + CSS.escape(c.dataset.ans) + '"]');
+        if (zone) (zone.querySelector('.kb-items') || zone).appendChild(c);
+      });
+    } else {
+      const ans = JSON.parse(w.dataset.answer);
+      w.querySelectorAll('.kb-entry').forEach((entry, j) => {
+        ['d', 'c'].forEach((side) => {
+          rows(entry, side).forEach((r, i) => {
+            const e = ans[j][side][i];
+            setSlot(r.querySelector('.kb-slot'), e ? e[0] : '');
+            r.querySelector('.kb-amt').value = e ? Number(e[1]).toLocaleString('ja-JP') : '';
+          });
+        });
+      });
+    }
+    clearMarks(w);
+    result(w, '正解を表示しました', null);
+  };
+
+  const reset = (w) => {
+    if (w.dataset.kb === 'sort') {
+      const pool = w.querySelector('.kb-pool');
+      [...w.querySelectorAll('.kb-chip')].sort((a, b) => a.dataset.i - b.dataset.i).forEach((c) => pool.appendChild(c));
+    } else {
+      w.querySelectorAll('.kb-slot').forEach((s) => setSlot(s, ''));
+      w.querySelectorAll('.kb-amt').forEach((i) => (i.value = ''));
+    }
+    clearMarks(w);
+  };
+
+  document.addEventListener('click', (e) => {
+    if (suppress) return;
+    const t = e.target;
+    const w = widgetOf(t);
+    if (!w) return;
+    if (t.closest('.kb-check')) return check(w);
+    if (t.closest('.kb-reveal')) return reveal(w);
+    if (t.closest('.kb-reset')) return reset(w);
+    const chip = t.closest('.kb-chip');
+    if (chip) return select(chip);
+    const slot = t.closest('.kb-slot');
+    if (slot) {
+      if (selected && widgetOf(selected) === w) { place(selected, slot); select(null); }
+      else if (slot.dataset.acct) { setSlot(slot, ''); clearMarks(w); }
+      return;
+    }
+    const zone = t.closest('[data-zone]');
+    if (zone && selected && widgetOf(selected) === w) { place(selected, zone); select(null); }
+  });
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-zone][role="button"]')) {
+      e.preventDefault();
+      e.target.click();
+    }
+  });
+
+  // ドラッグ（マウス・タッチ共通。HTML5のドラッグはスマホで動かないためポインターで実装）
+  document.addEventListener('pointerdown', (e) => {
+    const chip = e.target.closest && e.target.closest('.kb-chip');
+    if (!chip || e.button > 0) return;
+    drag = { chip, x: e.clientX, y: e.clientY, ghost: null, over: null };
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    if (!drag.ghost) {
+      if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 6) return;
+      const g = drag.chip.cloneNode(true);
+      g.classList.remove(...SEL);
+      g.classList.add('kb-ghost', 'shadow-lg');
+      document.body.appendChild(g);
+      drag.ghost = g;
+      select(null);
+    }
+    e.preventDefault();
+    drag.ghost.style.left = e.clientX + 'px';
+    drag.ghost.style.top = e.clientY + 'px';
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    let over = el && el.closest ? el.closest('.kb-slot') || el.closest('[data-zone]') : null;
+    if (over && widgetOf(over) !== widgetOf(drag.chip)) over = null;
+    if (over !== drag.over) {
+      if (drag.over) drag.over.classList.remove(...OVER);
+      drag.over = over;
+      if (over) over.classList.add(...OVER);
+    }
+  }, { passive: false });
+  const endDrag = () => {
+    if (!drag) return;
+    const d = drag;
+    drag = null;
+    if (!d.ghost) return;
+    d.ghost.remove();
+    if (d.over) { d.over.classList.remove(...OVER); place(d.chip, d.over); }
+    suppress = true;
+    setTimeout(() => (suppress = false), 0);
+  };
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', () => {
+    if (drag && drag.ghost) drag.ghost.remove();
+    if (drag && drag.over) drag.over.classList.remove(...OVER);
+    drag = null;
+  });
+
+  // 自己テスト（URL に ?selftest を付けたときだけ動く）
+  if (/[?&]selftest/.test(location.search)) {
+    setTimeout(() => {
+      const ws = [...document.querySelectorAll('[data-kb]')];
+      let pass = 0;
+      const fails = [];
+      const fire = (type, x, y, el) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, button: 0 }));
+      ws.forEach((w, i) => {
+        reset(w);
+        const chip = w.dataset.kb === 'sort'
+          ? w.querySelector('.kb-pool .kb-chip')
+          : [...w.querySelectorAll('.kb-pool .kb-chip')].find((c) => c.dataset.acct === JSON.parse(w.dataset.answer)[0].d[0][0]);
+        const target = w.dataset.kb === 'sort' ? w.querySelector('[data-zone="' + CSS.escape(chip.dataset.ans) + '"]') : w.querySelector('.kb-row[data-side="d"] .kb-slot');
+        target.scrollIntoView({ block: 'center' });
+        const a = chip.getBoundingClientRect();
+        const b = target.getBoundingClientRect();
+        fire('pointerdown', a.x + a.width / 2, a.y + a.height / 2, chip);
+        fire('pointermove', a.x + a.width / 2 + 12, a.y + a.height / 2 + 12, document);
+        fire('pointermove', b.x + b.width / 2, b.y + b.height / 2, document);
+        fire('pointerup', b.x + b.width / 2, b.y + b.height / 2, document);
+        const dragged = w.dataset.kb === 'sort' ? chip.closest('[data-zone]') === target : target.dataset.acct === chip.dataset.acct;
+        reveal(w);
+        check(w);
+        const right = w.dataset.ok === '1';
+        if (w.dataset.kb === 'sort') {
+          const pool = w.querySelector('.kb-pool');
+          pool.appendChild(w.querySelector('.kb-chip'));
+        } else {
+          const amt = w.querySelector('.kb-amt');
+          amt.value = amt.value + '1';
+        }
+        check(w);
+        const wrongDetected = w.dataset.ok === '0';
+        if (dragged && right && wrongDetected) pass++;
+        else fails.push('#' + i + (dragged ? '' : ' drag') + (right ? '' : ' answer') + (wrongDetected ? '' : ' wrong-undetected'));
+        reset(w);
+      });
+      const b = document.createElement('div');
+      b.id = 'kb-selftest';
+      b.textContent = 'SELFTEST ' + (fails.length ? 'NG' : 'OK') + ' : ' + pass + ' / ' + ws.length + (fails.length ? ' ' + fails.join(', ') : '');
+      b.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99;padding:12px;font:bold 16px sans-serif;color:#fff;background:' + (fails.length ? '#dc2626' : '#059669');
+      document.body.appendChild(b);
+      window.scrollTo(0, 0);
+    }, 400);
+  }
 })();
 </script>
 HTML
