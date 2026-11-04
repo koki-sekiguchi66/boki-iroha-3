@@ -1569,6 +1569,9 @@ sub head_html {
 <meta name="theme-color" content="#111827">
 <title>__TITLE__</title>
 <meta name="description" content="__DESC__">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
