@@ -23,6 +23,9 @@
 #    コンテナ（入れ子可）:
 #      mystery theory danger cfo answer exam next solve scene case
 #      example problem quiz summary point formula tgrid note
+#      real   … 実際にあった話（出典は中の ::note に書く）
+#      choice … cfo の中に「::choice A. 選択肢」を並べると選択式になる（中身はその選択へのフィードバック。
+#               選ぶまで解説 ::answer は開かない）
 #    データ（入れ子不可）:
 #      journal  … 「借方科目 金額 | 貸方科目 金額」（貸借一致を自動検証）
 #      taccount … 「摘要 金額 | 摘要 金額」、合計行は「= 金額 | 金額」
@@ -169,7 +172,7 @@ sub cells {
 
 # ---------------------------------------------------------------- parse
 my %RAW       = map { $_ => 1 } qw(journal taccount table boxes steps kpi timeline toc sort checks sim mock);
-my %CONTAINER = map { $_ => 1 } qw(mystery theory danger cfo answer exam next solve scene case example problem quiz summary point formula tgrid note);
+my %CONTAINER = map { $_ => 1 } qw(mystery theory danger cfo choice real answer exam next solve scene case example problem quiz summary point formula tgrid note);
 
 sub parse {
     my ($L, $ip, $nested) = @_;
@@ -452,10 +455,45 @@ sub r_box {
              . inner($k, $name) . '</aside>';
     }
     if ($name eq 'cfo') {
-        return qq{<section class="my-8 rounded-lg border-2 border-amber-300 bg-amber-50 p-5 sm:p-6">}
+        my @ch = grep { $_->{t} eq 'box' && $_->{name} eq 'choice' } @$k;
+        if (!@ch) {
+            return qq{<section class="my-8 rounded-lg border-2 border-amber-300 bg-amber-50 p-5 sm:p-6">}
+                 . label('text-amber-700', 'THINK ― 判断してみよう')
+                 . $title->('mb-3 text-lg font-bold leading-snug text-amber-950')
+                 . inner($k, $name) . '</section>';
+        }
+        # 選択式：先に自分の判断を選ぶと、その選択へのフィードバックと解説が開く
+        my @body = grep { !($_->{t} eq 'box' && ($_->{name} eq 'choice' || $_->{name} eq 'answer')) } @$k;
+        my @ans  = grep { $_->{t} eq 'box' && $_->{name} eq 'answer' } @$k;
+        my ($opts, $fbs) = ('', '');
+        for my $c (@ch) {
+            my ($key, $txt) = $c->{arg} =~ /^([A-ZＡ-Ｚ])[\.．:：\s]\s*(.*)$/ ? ($1, $2) : ('?', $c->{arg});
+            push @WARN, "[$CUR:$c->{line}] choice の先頭に「A.」のような記号がない" if $key eq '?';
+            $opts .= qq{<button type="button" class="kb-opt flex w-full items-start gap-3 rounded-lg border-2 border-amber-200 bg-white px-3 py-2.5 text-left hover:border-amber-400" data-k="$key" aria-pressed="false">}
+                   . qq{<span class="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-amber-500 text-xs font-black text-white">$key</span>}
+                   . '<span class="pt-0.5 text-[15px] font-bold leading-snug text-gray-900">' . inl($txt) . '</span></button>';
+            $fbs .= qq{<div class="kb-fb mt-3 rounded-lg border-2 border-amber-400 bg-white p-4 sm:p-5" data-k="$key">}
+                  . qq{<p class="mb-2 text-xs font-bold tracking-wider text-amber-700">「$key」を選んだ場合</p>} . inner($c->{kids}, 'choice') . '</div>';
+        }
+        $NCHK{think}++ if ($CTX{mode} // '') ne 'all';
+        return qq{<section class="kb-think my-8 rounded-lg border-2 border-amber-300 bg-amber-50 p-5 sm:p-6" data-think>}
              . label('text-amber-700', 'THINK ― 判断してみよう')
              . $title->('mb-3 text-lg font-bold leading-snug text-amber-950')
-             . inner($k, $name) . '</section>';
+             . inner(\@body, $name)
+             . qq{<p class="mb-2 mt-5 text-xs font-bold text-amber-800">あなたの判断は？　1つ選ぶと、その結果と考え方が開く。</p>}
+             . qq{<div class="grid gap-2" role="group" aria-label="選択肢">$opts</div>}
+             . $fbs . rn(\@ans, 'cfo')
+             . '<span class="hidden !border-amber-500 !bg-amber-100 ring-2 ring-amber-400"></span></section>';
+    }
+    if ($name eq 'choice') {    # cfo の外に置かれた choice（書き方の誤り）
+        push @WARN, "[$CUR:$n->{line}] ::choice は ::cfo（判断してみよう）の中でだけ使える";
+        return inner($k, $name);
+    }
+    if ($name eq 'real') {
+        return qq{<aside class="my-8 rounded-lg border border-t-4 border-stone-300 border-t-stone-700 bg-white p-5 shadow-sm sm:p-6">}
+             . label('text-stone-500', 'REAL CASE ― 実際にあった話')
+             . $title->('mb-3 font-serif text-lg font-black leading-snug text-stone-900')
+             . inner($k, $name) . '</aside>';
     }
     if ($name eq 'answer') {
         my $lab = $a ne '' ? $a : ($parent eq 'cfo' ? '考え方の例を見る' : '解答・解説を見る');
@@ -1589,7 +1627,7 @@ sub footer_html {
 <footer class="mt-16 border-t border-gray-200 bg-white">
   <div class="mx-auto max-w-3xl space-y-2 px-4 py-10 text-xs leading-relaxed text-gray-500 sm:px-6">
     <p class="font-bold text-gray-700">ケースで学ぶ簿記3級 ― 身近な会社の数字で、日商簿記3級の全範囲を学ぶ</p>
-    <p>本書に登場する企業・人物・数値は、学習のために設計した架空のものです。実在の企業・団体・商品とは関係ありません。</p>
+    <p>物語に登場する企業・人物・数値は、学習のために設計した架空のものです。実在の企業・団体・商品とは関係ありません。「実際にあった話」で紹介する事例と統計は、公開されている報道・統計資料にもとづき、出典を併記しています。</p>
     <p>出題範囲は日本商工会議所「商工会議所簿記検定試験 出題区分表」（2022年度適用版。2026年度の試験まで適用）に準拠し、2027年4月以降の試験に適用される改定（暫定版）の要点も併記しています。受験前に必ず日本商工会議所の公式情報をご確認ください。</p>
   </div>
 </footer>
@@ -1835,6 +1873,6 @@ if (@WARN) {
 }
 printf "検証OK: 仕訳 %d 件の貸借一致・T字勘定 %d 件の合計・帳簿/試算表など %d 表の縦計・全表の列数\n",
     $NCHK{journal} // 0, $NCHK{taccount} // 0, $NCHK{table} // 0;
-printf "演習: 仕訳入力 %d・穴埋め %d・分類 %d・チェック表 %d・シミュレーター %d ／ 用語リンク %d 語（辞典 %d 語）\n",
-    $NCHK{try} // 0, $NCHK{fill} // 0, $NCHK{sort} // 0, $NCHK{checks} // 0, $NCHK{sim} // 0,
+printf "演習: 仕訳入力 %d・穴埋め %d・分類 %d・チェック表 %d・シミュレーター %d・THINK選択式 %d ／ 用語リンク %d 語（辞典 %d 語）\n",
+    $NCHK{try} // 0, $NCHK{fill} // 0, $NCHK{sort} // 0, $NCHK{checks} // 0, $NCHK{sim} // 0, $NCHK{think} // 0,
     scalar(keys %{ { map { %{ $TUSED{$_} } } keys %TUSED } }), scalar(keys %TERM);

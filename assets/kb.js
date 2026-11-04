@@ -837,6 +837,31 @@
     addEventListener('resize', closeTerm);
   }
 
+  // ---------------------------------------------------------------- THINK（選択式）
+  // 選ぶまでは、各選択肢へのフィードバックと「考え方の例」を隠しておく（スクリプトが動かない環境では全部見える）
+  const THINK_ON = ['!border-amber-500', '!bg-amber-100', 'ring-2', 'ring-amber-400'];
+  $$('[data-think]').forEach((box) => {
+    $$('.kb-fb', box).forEach((f) => f.classList.add('hidden'));
+    $$('.kb-answer', box).forEach((a) => a.classList.add('hidden'));
+  });
+  const pickThink = (opt) => {
+    const box = opt.closest('[data-think]');
+    $$('.kb-opt', box).forEach((o) => {
+      const on = o === opt;
+      o.setAttribute('aria-pressed', on ? 'true' : 'false');
+      THINK_ON.forEach((c) => o.classList.toggle(c, on));
+    });
+    $$('.kb-fb', box).forEach((f) => f.classList.toggle('hidden', f.dataset.k !== opt.dataset.k));
+    $$('.kb-answer', box).forEach((a) => a.classList.remove('hidden'));
+    const fb = $$('.kb-fb', box).find((f) => f.dataset.k === opt.dataset.k);
+    if (fb && fb.scrollIntoView) fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  };
+  document.addEventListener('click', (e) => {
+    const o = e.target.closest && e.target.closest('.kb-opt');
+    if (o) pickThink(o);
+  });
+  addEventListener('beforeprint', () => $$('[data-think] .kb-fb, [data-think] .kb-answer').forEach((el) => el.classList.remove('hidden')));
+
   // ---------------------------------------------------------------- 模擬試験モード
   const M = document.querySelector('[data-mock]');
   const mock = M
@@ -1041,6 +1066,18 @@
         if (!Object.keys(exp).length || bad.length) fails.push('sim#' + i + ' ' + bad.map((key) => key + '=' + o[key]).join(','));
         else simPass++;
       });
+      const thinks = $$('[data-think]');
+      let thinkPass = 0;
+      thinks.forEach((box, i) => {
+        const opts = $$('.kb-opt', box);
+        const hiddenFirst = $$('.kb-fb', box).every((f) => f.classList.contains('hidden')) && $$('.kb-answer', box).every((a) => a.classList.contains('hidden'));
+        const last = opts[opts.length - 1];
+        last.click();
+        const shown = $$('.kb-fb', box).filter((f) => !f.classList.contains('hidden'));
+        const ok = hiddenFirst && opts.length >= 2 && shown.length === 1 && shown[0].dataset.k === last.dataset.k && last.getAttribute('aria-pressed') === 'true' && $$('.kb-answer', box).every((a) => !a.classList.contains('hidden'));
+        if (ok) thinkPass++;
+        else fails.push('think#' + i);
+      });
       let termOk = null;
       const term = document.querySelector('.kb-term');
       if (term && pop) {
@@ -1066,6 +1103,7 @@
       }
       const parts = ['演習 ' + pass + ' / ' + ws.length];
       if (sims.length) parts.push('シミュレーター ' + simPass + ' / ' + sims.length);
+      if (thinks.length) parts.push('THINK ' + thinkPass + ' / ' + thinks.length);
       if (termOk !== null) parts.push('用語 ' + (termOk ? 'OK' : 'NG'));
       if (mockOk !== null) parts.push('模試 ' + (mockOk ? 'OK' : 'NG'));
       const b = document.createElement('div');
