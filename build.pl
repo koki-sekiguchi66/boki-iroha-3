@@ -132,7 +132,12 @@ sub inl {
     $s =~ s{==(.+?)==}{<mark class="rounded-sm bg-yellow-200 px-0.5 text-gray-900">$1</mark>}g;
     my $red = $DARK ? 'text-red-400' : 'text-red-600';
     $s =~ s{!!(.+?)!!}{<span class="font-bold $red">$1</span>}g;
-    $s =~ s{\[([^\]]+?)\]\(([^)\s]+)\)}{<a href="$2" class="whitespace-nowrap font-bold underline decoration-amber-400 decoration-2 underline-offset-4 hover:text-amber-700">$1</a>}g;
+    # 「第7章」のような短いリンクは改行させない。出典のような長いリンクは、スマホの幅で折り返す
+    $s =~ s{\[([^\]]+?)\]\(([^)\s]+)\)}{
+        my ($t, $u) = ($1, $2);
+        my $wrap = length($t =~ s/<[^>]*>//gr) <= 10 ? 'whitespace-nowrap' : 'break-words';
+        qq{<a href="$u" class="$wrap font-bold underline decoration-amber-400 decoration-2 underline-offset-4 hover:text-amber-700">$t</a>}
+    }ge;
     return $s;
 }
 
