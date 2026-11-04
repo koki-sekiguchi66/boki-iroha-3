@@ -3,7 +3,8 @@
 #  ケースで学ぶ簿記3級 ― 静的サイトジェネレーター（Perl 5 / 追加モジュール不要）
 #
 #  使い方:   perl build.pl          （Git Bash などから実行）
-#  入力:     _src/book.txt   … 章の並び（1行1ID）
+#  入力:     _src/book.txt   … 章の並び（1行1ID）。「@title 書名」などの行で本の設定を変えられる
+#                              （@title @subtitle @hero @mark @start @key @scope。なければ3級の既定値）
 #            _src/index.txt  … 表紙ページの本文
 #            _src/<id>.txt   … 各章の本文（独自マークアップ）
 #  出力:     public/ に index.html / <id>.html / all.html（全章一気読み版）
@@ -60,8 +61,16 @@ my $SRC      = "$ROOT/_src";
 my $OUT      = "$ROOT/public";    # 公開用の出力先（Cloudflare Pages の Build output directory）
 mkdir $OUT or die "出力先を作成できません $OUT: $!\n" unless -d $OUT;
 my $KBJS     = -e "$ROOT/assets/kb.js" ? slurp("$ROOT/assets/kb.js") : '';    # 演習・シミュレーター・用語・模擬試験
-my $BOOK     = 'ケースで学ぶ簿記3級';
-my $BOOK_SUB = '身近な会社の数字で、日商簿記3級の全範囲を学ぶ';
+# 本の設定：book.txt の「@キー 値」の行で上書きできる（なければ3級の既定値）
+my %CFG      = map { /^@(\w+)\s+(.*)$/ ? ($1 => $2) : () } map { trim($_) } split /\n/, slurp("$SRC/book.txt");
+my $BOOK     = $CFG{title}    // 'ケースで学ぶ簿記3級';
+my $BOOK_SUB = $CFG{subtitle} // '身近な会社の数字で、日商簿記3級の全範囲を学ぶ';
+my $HERO     = $CFG{hero}     // 'ケースで学ぶ<br>簿記3級';    # 表紙の大見出し（<br> で改行）
+my $MARK     = $CFG{mark}     // '簿';                        # ヘッダーの1文字ロゴ
+my $START    = $CFG{start}    // '序章から読む';              # 表紙の「最初の章へ」ボタン
+my $KEY      = $CFG{key}      // 'kb3';                       # localStorage のキーの接頭辞（本ごとに変える）
+my $SCOPE    = $CFG{scope}    // '出題範囲は日本商工会議所「商工会議所簿記検定試験 出題区分表」（2022年度適用版。2026年度の試験まで適用）に準拠し、2027年4月以降の試験に適用される改定（暫定版）の要点も併記しています。受験前に必ず日本商工会議所の公式情報をご確認ください。';
+$KBJS =~ s/'kb3-/'$KEY-/g;
 
 our ($CUR, $DARK, $SECN) = ('', 0, 0);
 our %CTX;
@@ -1618,7 +1627,7 @@ sub site_header {
     my $home  = $mode eq 'all' ? '#top' : 'index.html';
     return qq{<header class="no-print sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur">}
          . qq{<div class="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4 sm:px-6">}
-         . qq{<a href="$home" class="flex min-w-0 items-center gap-2"><span class="flex h-7 w-7 flex-none items-center justify-center rounded bg-gray-900 font-serif text-sm font-black text-amber-400">簿</span><span class="truncate text-sm font-black text-gray-900 sm:text-base">$BOOK</span></a>}
+         . qq{<a href="$home" class="flex min-w-0 items-center gap-2"><span class="flex h-7 w-7 flex-none items-center justify-center rounded bg-gray-900 font-serif text-sm font-black text-amber-400">$MARK</span><span class="truncate text-sm font-black text-gray-900 sm:text-base">$BOOK</span></a>}
          . qq{<div class="flex flex-none items-center gap-2">}
          . ($label ? qq{<span class="hidden text-xs font-bold text-gray-400 sm:inline">$label</span>} : '')
          . qq{<details data-dropdown class="relative"><summary class="flex cursor-pointer select-none items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-bold text-gray-700 hover:bg-gray-50">目次<span class="text-[10px] text-gray-400">▼</span></summary>}
@@ -1631,19 +1640,19 @@ sub site_header {
 }
 
 sub footer_html {
-    return <<'HTML';
+    return <<"HTML";
 <footer class="mt-16 border-t border-gray-200 bg-white">
   <div class="mx-auto max-w-3xl space-y-2 px-4 py-10 text-xs leading-relaxed text-gray-500 sm:px-6">
-    <p class="font-bold text-gray-700">ケースで学ぶ簿記3級 ― 身近な会社の数字で、日商簿記3級の全範囲を学ぶ</p>
+    <p class="font-bold text-gray-700">$BOOK ― $BOOK_SUB</p>
     <p>物語に登場する企業・人物・数値は、学習のために設計した架空のものです。実在の企業・団体・商品とは関係ありません。「実際にあった話」で紹介する事例と統計は、公開されている報道・統計資料にもとづき、出典を併記しています。</p>
-    <p>出題範囲は日本商工会議所「商工会議所簿記検定試験 出題区分表」（2022年度適用版。2026年度の試験まで適用）に準拠し、2027年4月以降の試験に適用される改定（暫定版）の要点も併記しています。受験前に必ず日本商工会議所の公式情報をご確認ください。</p>
+    <p>$SCOPE</p>
   </div>
 </footer>
 HTML
 }
 
 sub script_html {    # 進捗バー・目次・「続きから」＋ 演習などのスクリプト（assets/kb.js をそのまま埋め込む）
-    return <<'HTML' . "<script>\n$KBJS</script>\n";
+    return (<<'HTML' =~ s/'kb3-/'$KEY-/gr) . "<script>\n$KBJS</script>\n";
 <script>
 (() => {
   const bar = document.getElementById('progress');
@@ -1778,7 +1787,7 @@ sub render_body {
 }
 
 # ---------------------------------------------------------------- main
-my @ALL = grep { /\S/ && !/^#/ } map { trim($_) } split /\n/, slurp("$SRC/book.txt");
+my @ALL = grep { /\S/ && !/^#/ && !/^@/ } map { trim($_) } split /\n/, slurp("$SRC/book.txt");
 my @IDS = grep { -e "$SRC/$_.txt" } @ALL;
 print "未作成（スキップ）: ", join(', ', grep { !-e "$SRC/$_.txt" } @ALL), "\n" if @IDS < @ALL;
 $CTX{ids} = \@IDS;
@@ -1811,7 +1820,7 @@ if (-e "$SRC/guide.txt") {
     local $CTX{mode} = 'page';
     my $body = render_body('guide');
     my $cta  = qq{<nav class="no-print mt-16"><a href="$IDS[0].html" class="group block rounded-lg border border-gray-900 bg-gray-900 p-5 text-center transition hover:bg-gray-800">}
-             . qq{<p class="text-xs font-bold text-amber-400">準備ができたら</p><p class="mt-1 text-lg font-black text-white group-hover:underline">序章から読む →</p></a></nav>};
+             . qq{<p class="text-xs font-bold text-amber-400">準備ができたら</p><p class="mt-1 text-lg font-black text-white group-hover:underline">$START →</p></a></nav>};
     spew("$OUT/guide.html", page_html(
         title => "本書の使い方 | $BOOK",
         desc  => $META{guide}{lead} // $BOOK_SUB,
@@ -1831,10 +1840,10 @@ sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに�
          . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-0 opacity-[0.08]"><div class="absolute left-0 right-0 top-24 h-px bg-white"></div><div class="absolute bottom-0 left-1/2 top-24 w-px bg-white"></div>}
          . qq{<div class="absolute left-[12%] top-8 font-serif text-5xl font-black sm:text-7xl">借方</div><div class="absolute right-[12%] top-8 font-serif text-5xl font-black sm:text-7xl">貸方</div></div>}
          . qq{<div class="relative mx-auto max-w-3xl px-4 pb-12 pt-16 sm:px-6 sm:pb-16 sm:pt-24">}
-         . qq{<h1 class="font-serif text-[2.6rem] font-black leading-[1.2] sm:text-6xl">ケースで学ぶ<br>簿記3級</h1>}
+         . qq{<h1 class="font-serif text-[2.6rem] font-black leading-[1.2] sm:text-6xl">$HERO</h1>}
          . qq{<p class="mt-4 font-bold text-amber-300 text-balance [word-break:auto-phrase] sm:text-lg">$BOOK_SUB</p>}
          . qq{<div class="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">$cont}
-         . qq{<a id="cta-start" href="$start" class="rounded-md bg-amber-400 px-5 py-3 font-black text-gray-900 transition hover:bg-amber-300">序章から読む →</a>}
+         . qq{<a id="cta-start" href="$start" class="rounded-md bg-amber-400 px-5 py-3 font-black text-gray-900 transition hover:bg-amber-300">$START →</a>}
          . qq{<a href="guide.html" class="text-sm font-bold text-gray-300 underline decoration-gray-500 underline-offset-4 transition hover:text-white">はじめての方へ</a></div>}
          . qq{</div></section>\n};
 }
