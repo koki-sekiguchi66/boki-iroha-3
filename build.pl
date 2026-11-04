@@ -27,15 +27,22 @@
 #      journal  … 「借方科目 金額 | 貸方科目 金額」（貸借一致を自動検証）
 #      taccount … 「摘要 金額 | 摘要 金額」、合計行は「= 金額 | 金額」
 #      table    … パイプ区切り。1行目が見出し。"!!" 行で2段見出し（"受入*3" = 3列結合）
-#                 "|=" で始まる行は強調行
+#                 "|=" で始まる行は強調行。引数の先頭に compact / sum / split:N を付けられる
 #      boxes    … 「H 左見出し | 右見出し」「L|R 色 数値 ラベル」（色: a l e x r p s z k d）
 #      steps / kpi / timeline … 「項目 | 説明 | 補足」
 #      toc      … 目次（表紙用）
 #      sort     … ドラッグで分類する演習。「@cats 分類1 | 分類2 …」と「項目 => 正しい分類」を並べる
+#      checks   … チェック表の演習。1行目が見出し、2行目以降は「行の名前 | 正解のマスに ✓ | …」
+#      sim      … シミュレーター（"::sim fifo|ccc|dep タイトル"、"@expect キー=値" は本文の数値との照合用）
+#      mock     … 模擬試験モード（"::mock 制限時間（分）"、各行「大問の見出し | 配点」）
 #
 #  ■ 演習の自動生成
 #    example / problem の answer に journal があれば、仕訳の入力欄（ドラッグ＋金額入力＋答え合わせ）を
 #    自動で付ける。付けたくない問題は、問題文に <!-- notry --> の行を入れる。
+#    問題文に [[答え]] / [[ア:答え]] / [[答え@15・18]] を書くと穴埋めの入力欄になる（数値は入力、語句は選択式。
+#    選択肢は答え＋「<!-- choices: A | B -->」。[[]] は空けておくのが正解の欄。@ の後は復習する章）。
+#    本文の勘定科目には、付録A（apx-a.txt）の辞典から用語のポップアップを自動で付ける。
+#    ブラウザで動く処理は assets/kb.js にあり、各ページへそのまま埋め込む。
 #    ページの URL に ?selftest を付けて開くと、全演習の自己テスト結果が画面上部に表示される。
 # ======================================================================
 use strict;
@@ -49,6 +56,7 @@ my $ROOT     = $Bin;
 my $SRC      = "$ROOT/_src";
 my $OUT      = "$ROOT/public";    # 公開用の出力先（Cloudflare Pages の Build output directory）
 mkdir $OUT or die "出力先を作成できません $OUT: $!\n" unless -d $OUT;
+my $KBJS     = -e "$ROOT/assets/kb.js" ? slurp("$ROOT/assets/kb.js") : '';    # 演習・シミュレーター・用語・模擬試験
 my $BOOK     = 'ケースで学ぶ簿記3級';
 my $BOOK_SUB = '身近な会社の数字で、日商簿記3級の全範囲を学ぶ';
 
@@ -86,6 +94,15 @@ sub esc {
 
 sub trim { my $s = shift // ''; $s =~ s/^\s+|\s+$//g; return $s; }
 
+# 穴埋めの空欄 [[答え]] / [[ラベル:答え]] / [[答え@15・18]]（@ の後は、間違えたときに復習する章）
+# を、検証用に答えの文字列へ戻す
+my $BLANK_RE = qr/\[\[(?:([^\]:\s]{1,4}):)?([^\]@]*)(?:@([\d・]+))?\]\]/;
+sub unblank {
+    my $s = shift // '';
+    $s =~ s/$BLANK_RE/$2/g;
+    return $s;
+}
+
 my %BADGE = (
     new => 'bg-amber-100 text-amber-800 ring-1 ring-amber-300',
     old => 'bg-gray-100 text-gray-600 ring-1 ring-gray-300',
@@ -102,6 +119,7 @@ my %BADGE = (
 sub inl {
     my $s = esc(shift);
     $s =~ s{&lt;br&gt;}{<br>}g;
+    $s =~ s{$BLANK_RE}{blank_html($1, $2, $3)}ge;    # 穴埋めの空欄 → 入力欄
     $s =~ s{\{\{(\w+):(.+?)\}\}}{
         my $c = $BADGE{$1} // $BADGE{tag};
         qq{<span class="mx-0.5 inline-block whitespace-nowrap rounded px-1.5 py-1 align-[0.1em] text-[11px] font-bold leading-none $c">$2</span>}
@@ -117,7 +135,7 @@ sub inl {
 
 # 金額文字列 → 数値（数値でなければ undef）
 sub amt {
-    my $s = shift;
+    my $s = unblank(shift);
     return undef unless defined $s && $s =~ /\d/;
     return undef if $s =~ /[?？□（(ア-ン]/;
     my $neg = ($s =~ /^\s*[△▲\-−]/) ? -1 : 1;
@@ -127,17 +145,17 @@ sub amt {
 }
 
 sub is_num {
-    my $s = shift // '';
+    my $s = unblank(shift // '');
     return $s =~ /^\s*[@＠¥￥△▲\-−+(（]*\s*\d[\d,.]*\s*[)）%]*\s*(?:円|万円|億円|千円|kg|g|個|台|本|人|名|か月|ヶ月|年|日|件|回|食|杯|枚|席|口|%|倍|ポイント|pt)?\s*$/;
 }
 
-# 「勘定科目 金額」を分解（金額は末尾の数値。穴埋め用の「？」「（ア）」も可）
+# 「勘定科目 金額」を分解（金額は末尾の数値。穴埋め用の「？」「（ア）」、数値の空欄 [[…]] も可）
 sub side {
     my $t = trim(shift);
     return ('', '') if $t eq '';
     if ($t =~ /^(.*\S)\s+(\S+)$/) {
         my ($acct, $v) = ($1, $2);
-        return ($acct, $v) if is_num($v) || $v =~ /^(?:[?？□]+|（.*）|\(.*\))$/;
+        return ($acct, $v) if is_num($v) || $v =~ /^(?:[?？□]+|（.*）|\(.*\))$/ || $v =~ /^\[\[(?:[^\]:\s]{1,4}:)?\]\]$/;
     }
     return ($t, '');
 }
@@ -150,7 +168,7 @@ sub cells {
 }
 
 # ---------------------------------------------------------------- parse
-my %RAW       = map { $_ => 1 } qw(journal taccount table boxes steps kpi timeline toc sort);
+my %RAW       = map { $_ => 1 } qw(journal taccount table boxes steps kpi timeline toc sort checks sim mock);
 my %CONTAINER = map { $_ => 1 } qw(mystery theory danger cfo answer exam next solve scene case example problem quiz summary point formula tgrid note);
 
 sub parse {
@@ -219,6 +237,111 @@ sub parse {
     return \@nodes;
 }
 
+# ---------------------------------------------------------------- 用語のポップアップ（付録Aの勘定科目辞典から作る）
+#   本文の段落・箇条書きに出てくる勘定科目を、見出し（##）ごとに最初の1回だけタップできるようにする。
+#   日常語としても使う科目（現金・売上など）は対象外。長い科目名を優先し、熟語の一部（「売掛金元帳」の「売掛金」など）は対象外。
+my (%TERM, %TUSED, $TERMRE);
+my %NOLINK = map { $_ => 1 } qw(現金 売上 仕入 商品 損益 土地 建物 備品 給料);
+
+sub load_terms {
+    my $f = "$SRC/apx-a.txt";
+    return unless -e $f;
+    my ($cat, $in) = ('', 0);
+    for my $l (split /\n/, slurp($f)) {
+        if ($l =~ /^::table\s+(.*)$/) {
+            my $c = $1;
+            $cat = $c =~ /^(資産|負債|純資産|収益|費用)の勘定科目/ ? $1 : $c =~ /^評価勘定/ ? '評価勘定' : $c =~ /^その他の勘定/ ? 'その他' : '';
+            $in = $cat ne '';
+            next;
+        }
+        if ($l =~ /^::\s*$/) { $in = 0; next; }
+        next unless $in && $l =~ /^\|/;
+        my ($name, $desc, $ch) = cells($l);
+        next if !defined $desc || $name eq '勘定科目';
+        my $badge = $name =~ /\{\{(new|old):/ ? $1 : '';
+        $name =~ s/\{\{.*?\}\}//g;
+        my $yomi = $name =~ s/<br>\^\^(.*?)\^\^// ? $1 : '';
+        $name = trim($name);
+        $name =~ s/（.*?）$//;    # 「前払費用（前払保険料など）」→ 前払費用
+        my ($lab, $href) = ($ch // '') =~ /\[([^\]]+)\]\(([^)]+)\)/ ? ($1, $2) : ('', '');
+        my $id = $href =~ /^([\w-]+)\.html$/ ? $1 : '';
+        $lab = "第$lab" if $lab =~ /^\d/;
+        my $first = 1;
+        for my $n (split /・/, $name) {
+            $TERM{$n} = { y => ($first ? $yomi : ''), c => $cat, d => $desc, id => $id, l => $lab, b => $badge };
+            $first = 0;
+        }
+    }
+    my @names = sort { length($b) <=> length($a) || $a cmp $b } grep { !$NOLINK{$_} } keys %TERM;
+    $TERMRE = join '|', map { quotemeta } @names if @names;
+}
+
+sub termify {
+    my $h = shift;
+    return $h unless $TERMRE && $CTX{terms};
+    my $seen = ($CTX{tseen} //= {});
+    my ($out, $skip) = ('', 0);
+    for my $part (split /(<[^>]*>)/, $h) {
+        if ($part =~ /^</) {
+            if    ($part =~ m{^<(?:a|button|select|label|textarea)\b}i)    { $skip++; }
+            elsif ($part =~ m{^</(?:a|button|select|label|textarea)>}i)    { $skip-- if $skip > 0; }
+            $out .= $part;
+            next;
+        }
+        if (!$skip) {
+            $part =~ s{(?<![\p{Han}\p{Katakana}ー])($TERMRE)(?=勘定|[^\p{Han}\p{Katakana}ー]|$)}{
+                my $t = $1;
+                if ($seen->{$t}++) { $t }
+                else {
+                    $TUSED{$CUR}{$t} = 1;
+                    qq{<button type="button" class="kb-term cursor-help underline decoration-gray-400 decoration-dotted decoration-2 underline-offset-[5px] transition hover:text-amber-700 hover:decoration-amber-500" data-term="$t" aria-haspopup="dialog">$t</button>};
+                }
+            }ge;
+        }
+        $out .= $part;
+    }
+    return $out;
+}
+
+my %CATBADGE = (
+    '資産' => 'bg-blue-100 text-blue-800', '負債' => 'bg-rose-100 text-rose-800', '純資産' => 'bg-emerald-100 text-emerald-800',
+    '収益' => 'bg-violet-100 text-violet-800', '費用' => 'bg-amber-100 text-amber-800', '評価勘定' => 'bg-slate-200 text-slate-800', 'その他' => 'bg-gray-100 text-gray-700',
+);
+my %HOMEPOS = (
+    '資産' => '増えたら借方（左）', '費用' => '増えたら借方（左）', '負債' => '増えたら貸方（右）', '純資産' => '増えたら貸方（右）',
+    '収益' => '増えたら貸方（右）', '評価勘定' => '残高は貸方（資産から差し引く）', 'その他' => '',
+);
+
+sub terms_block {    # ページで使った用語のデータと、ポップアップの枠
+    my ($ids, $mode, $cur) = @_;
+    my %out;
+    for my $id (@$ids) {
+        for my $t (keys %{ $TUSED{$id} || {} }) {
+            my $e = $TERM{$t};
+            $out{$t} = {
+                y  => $e->{y}, c => $e->{c}, cc => $CATBADGE{ $e->{c} } // '', hp => $HOMEPOS{ $e->{c} } // '',
+                d  => $e->{d}, l => $e->{l},
+                b  => ($e->{b} eq 'new' ? '2027年度〜' : $e->{b} eq 'old' ? '2027年度〜範囲外' : ''),
+                bc => ($e->{b} ? $BADGE{ $e->{b} } : ''),
+                h  => ($e->{id} && $e->{id} ne ($cur // '') ? href_for($e->{id}, $mode) : ''),
+            };
+        }
+    }
+    return '' unless %out;
+    my $json = JSON::PP->new->canonical(1)->encode(\%out);
+    $json =~ s{</}{<\\/}g;
+    my $dict = href_for('apx-a', $mode);
+    my $safe = join ' ', sort values %CATBADGE;
+    return qq{<script type="application/json" id="kb-terms">$json</script>\n}
+         . qq{<div id="kb-pop" role="dialog" aria-label="用語の説明" class="no-print absolute z-50 hidden w-[min(20rem,calc(100vw-1.5rem))] rounded-lg border border-gray-200 bg-white p-4 text-left text-gray-800 shadow-xl">}
+         . qq{<div class="flex items-start gap-2"><div class="min-w-0 flex-1"><p class="text-[11px] leading-tight text-gray-500" data-f="y"></p><p class="text-lg font-black leading-snug text-gray-900" data-f="n"></p></div>}
+         . qq{<button type="button" data-close class="-mr-2 -mt-2 flex h-9 w-9 flex-none items-center justify-center rounded-full text-xl leading-none text-gray-400 hover:bg-gray-100 hover:text-gray-700" aria-label="閉じる">×</button></div>}
+         . qq{<div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1"><span class="rounded px-1.5 py-0.5 text-[11px] font-bold" data-f="c"></span><span class="text-[11px] font-bold text-gray-500" data-f="hp"></span><span class="hidden rounded px-1.5 py-0.5 text-[11px] font-bold" data-f="b"></span></div>}
+         . qq{<p class="mt-2 text-sm leading-relaxed text-gray-700" data-f="d"></p>}
+         . qq{<div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold"><a class="text-amber-700 underline decoration-amber-400 decoration-2 underline-offset-4" data-f="h"></a><a href="$dict" class="text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-gray-800">勘定科目辞典</a></div>}
+         . qq{<span class="hidden $safe $BADGE{new} $BADGE{old}"></span></div>\n};
+}
+
 # ---------------------------------------------------------------- render: lines
 sub r_h {
     my ($lv, $t) = @_;
@@ -227,6 +350,8 @@ sub r_h {
         $SECN++;
         my $id = "$CUR-s$SECN";
         push @{ $TOC{$CUR} }, [$id, $t];
+        $CTX{h2}    = $t;     # 演習がどの大問（見出し）に属するか（模擬試験の採点用）
+        $CTX{tseen} = {};     # 用語のリンクは見出しごとに最初の1回だけ
         my $n = sprintf('%02d', $SECN);
         return qq{<h2 id="$id" class="mb-6 mt-16 flex scroll-mt-20 items-baseline gap-3 font-serif text-[1.4rem] font-black leading-snug $c sm:text-[1.65rem]">}
              . qq{<span class="flex-none font-sans text-sm font-black tracking-widest text-amber-600">$n</span><span>} . inl($t) . '</span></h2>';
@@ -271,12 +396,12 @@ sub rn {
     my $h = '';
     for my $n (@$nodes) {
         my $t = $n->{t};
-        if    ($t eq 'p')     { $h .= '<p class="my-5 leading-[1.95]">' . inl($n->{text}) . '</p>'; }
+        if    ($t eq 'p')     { $h .= termify('<p class="my-5 leading-[1.95]">' . inl($n->{text}) . '</p>'); }
         elsif ($t eq 'h')     { $h .= r_h($n->{level}, $n->{text}); }
         elsif ($t eq 'hr')    { $h .= '<hr class="my-14 h-px border-0 bg-gradient-to-r from-transparent via-gray-300 to-transparent">'; }
-        elsif ($t eq 'ul')    { $h .= r_ul($n->{items}); }
-        elsif ($t eq 'ol')    { $h .= '<ol class="my-5 list-decimal space-y-2 pl-6 marker:font-bold marker:text-gray-400">' . join('', map { '<li class="leading-[1.85]">' . inl($_) . '</li>' } @{ $n->{items} }) . '</ol>'; }
-        elsif ($t eq 'quote') { $h .= '<blockquote class="my-6 border-l-4 border-gray-300 pl-4 font-serif text-gray-600">' . join('', map { '<p class="my-2 leading-[1.9]">' . inl($_) . '</p>' } @{ $n->{lines} }) . '</blockquote>'; }
+        elsif ($t eq 'ul')    { $h .= termify(r_ul($n->{items})); }
+        elsif ($t eq 'ol')    { $h .= termify('<ol class="my-5 list-decimal space-y-2 pl-6 marker:font-bold marker:text-gray-400">' . join('', map { '<li class="leading-[1.85]">' . inl($_) . '</li>' } @{ $n->{items} }) . '</ol>'); }
+        elsif ($t eq 'quote') { $h .= termify('<blockquote class="my-6 border-l-4 border-gray-300 pl-4 font-serif text-gray-600">' . join('', map { '<p class="my-2 leading-[1.9]">' . inl($_) . '</p>' } @{ $n->{lines} }) . '</blockquote>'); }
         elsif ($t eq 'html')  { $h .= $n->{text}; }
         elsif ($t eq 'raw')   { $h .= r_raw($n); }
         elsif ($t eq 'box')   { $h .= r_box($n, $parent); }
@@ -300,6 +425,8 @@ sub r_box {
     my ($n, $parent) = @_;
     my ($name, $a, $k) = @$n{qw(name arg kids)};
     local $DARK = ($name eq 'mystery') ? 1 : 0;
+    # 用語のポップアップは、物語・公式・確認問題（答えのヒントになる）の中では付けない
+    local $CTX{terms} = ($name =~ /^(?:mystery|formula|problem|scene)$/) ? 0 : $CTX{terms};
     my $title = sub {
         my $cls = shift;
         return $a ne '' ? qq{<p class="$cls">} . inl($a) . '</p>' : '';
@@ -332,7 +459,7 @@ sub r_box {
     }
     if ($name eq 'answer') {
         my $lab = $a ne '' ? $a : ($parent eq 'cfo' ? '考え方の例を見る' : '解答・解説を見る');
-        return qq{<details class="group mt-5 rounded-lg border border-gray-300 bg-white text-gray-800 shadow-sm">}
+        return qq{<details class="kb-answer group mt-5 rounded-lg border border-gray-300 bg-white text-gray-800 shadow-sm">}
              . qq{<summary class="flex cursor-pointer select-none items-center justify-between gap-3 rounded-lg px-4 py-3 font-bold text-gray-900 hover:bg-gray-50"><span>} . inl($lab)
              . qq{</span><span class="flex-none text-xs text-gray-400 transition-transform group-open:rotate-180">▼</span></summary>}
              . qq{<div class="border-t border-gray-200 px-4 py-4 sm:px-5">} . inner($k, $name) . '</div></details>';
@@ -366,15 +493,18 @@ sub r_box {
              . qq{<div class="flex flex-wrap items-center gap-x-3 gap-y-1 bg-gray-900 px-5 py-3 text-white"><span class="text-[11px] font-bold tracking-[0.3em] text-amber-400">CASE FILE</span><span class="font-bold">} . inl($a) . '</span></div>'
              . qq{<div class="p-5 sm:p-6">} . inner($k, $name) . '</div></section>';
     }
+    # 例題・確認問題の枠：表の穴埋めがあるときは、スマホで表が収まるよう余白を詰める
+    my $pad = (($name eq 'example' || $name eq 'problem')
+               && grep { /\[\[/ } node_texts([ grep { $_->{t} eq 'raw' || ($_->{t} eq 'box' && $_->{name} ne 'answer') } @$k ])) ? 'p-3' : 'p-4';
     if ($name eq 'example') {
-        return qq{<section class="my-8 rounded-lg border border-gray-300 bg-white p-5 shadow-sm sm:p-6">}
+        return qq{<section class="my-8 rounded-lg border border-gray-300 bg-white $pad shadow-sm sm:p-6">}
              . qq{<p class="mb-3 flex flex-wrap items-baseline gap-2"><span class="rounded bg-gray-900 px-2 py-0.5 text-xs font-bold text-white">例題</span><span class="font-bold leading-snug text-gray-900">} . inl($a) . '</span></p>'
              . with_try($k, $name, $n->{line}) . '</section>';
     }
     if ($name eq 'problem') {
         $CTX{qn}++;
         my $no = $CTX{qn};
-        return qq{<section class="rounded-lg border border-gray-300 bg-white p-5 shadow-sm sm:p-6">}
+        return qq{<section class="rounded-lg border border-gray-300 bg-white $pad shadow-sm sm:p-6">}
              . qq{<p class="mb-3 flex flex-wrap items-baseline gap-2"><span class="rounded bg-amber-500 px-2 py-0.5 text-xs font-black text-white">問$no</span><span class="font-bold leading-snug text-gray-900">} . inl($a) . '</span></p>'
              . with_try($k, $name, $n->{line}) . '</section>';
     }
@@ -427,6 +557,9 @@ sub r_raw {
         timeline => \&r_timeline,
         toc      => \&r_toc,
         sort     => \&r_sort,
+        checks   => \&r_checks,
+        sim      => \&r_sim,
+        mock     => \&r_mock,
     );
     return $f{ $n->{name} }->($n->{arg}, $n->{lines}, $n->{line});
 }
@@ -441,7 +574,7 @@ my %CATSTYLE = (
     '収益'   => ['border-violet-300 bg-violet-50',   'text-violet-700'],
     '費用'   => ['border-amber-300 bg-amber-50',     'text-amber-700'],
 );
-my $KB_SAFE = '<span class="hidden ring-2 ring-indigo-500 ring-indigo-400 ring-offset-1 !border-emerald-500 !bg-emerald-50 !border-red-500 !bg-red-50 text-emerald-600 text-red-600 shadow-lg"></span>';
+my $KB_SAFE = '<span class="hidden ring-2 ring-indigo-500 ring-indigo-400 ring-offset-1 !border-emerald-500 !bg-emerald-50 !border-red-500 !bg-red-50 !bg-emerald-100 !bg-red-100 text-emerald-600 text-red-600 text-gray-500 shadow-lg"></span>';
 my $KB_CHIP = 'kb-chip touch-none select-none max-w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-left text-sm font-bold leading-snug text-gray-800 shadow-sm transition hover:border-indigo-400';
 my $KB_BTN  = 'rounded-md px-3 py-1.5 text-sm font-bold transition';
 
@@ -455,6 +588,14 @@ sub hval {
 sub dshuffle {    # 決定的なシャッフル（ビルドのたびに並びが変わらない）
     my ($seed, @a) = @_;
     return sort { hval($a, $seed) <=> hval($b, $seed) || $a cmp $b } @a;
+}
+
+# 演習に付ける属性：所属する大問（見出し）と、解説で参照している章（模擬試験の採点・復習案内に使う）
+sub kb_attrs {
+    my $a = '';
+    $a .= ' data-sec="' . esc($CTX{h2}) . '"' if defined $CTX{h2} && $CTX{h2} ne '';
+    $a .= ' data-ch="' . esc($CTX{refch}) . '"' if $CTX{refch};
+    return $a;
 }
 
 sub kb_buttons {
@@ -487,11 +628,12 @@ sub r_sort {
     } dshuffle($ln, map { $_->[0] } @items);
     my $zones = join '', map {
         my ($box, $lab) = @{ $CATSTYLE{$_} // ['border-slate-300 bg-slate-50', 'text-slate-600'] };
-        qq{<div class="kb-zone min-h-[4.5rem] rounded-md border-2 border-dashed $box p-2 transition" data-zone="} . esc($_) . qq{" role="button" tabindex="0">}
+        my $unused = /使わない/ ? ' data-unused="1"' : '';    # 「使わない語句」は採点の対象外
+        qq{<div class="kb-zone min-h-[4.5rem] rounded-md border-2 border-dashed $box p-2 transition" data-zone="} . esc($_) . qq{"$unused role="button" tabindex="0">}
           . qq{<p class="mb-1.5 text-xs font-bold $lab">} . inl($_) . '</p><div class="kb-items flex flex-wrap gap-1.5"></div></div>';
     } @cats;
     my $cols = (@cats <= 2 || @cats == 4) ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3';
-    return qq{<div class="kb-sort my-5 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 sm:p-4" data-kb="sort">$KB_SAFE}
+    return qq{<div class="kb-sort my-5 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 sm:p-4" data-kb="sort"} . kb_attrs() . qq{>$KB_SAFE}
          . qq{<p class="mb-1 text-[11px] font-bold tracking-[0.25em] text-indigo-600">TRY ― ドラッグして分類</p>}
          . qq{<p class="mb-3 text-xs leading-relaxed text-gray-600">} . ($arg ne '' ? inl($arg) . '<br>' : '') . 'ドラッグで分類先へ移すか、タップしてから分類先をタップしよう。</p>'
          . qq{<div class="kb-pool flex min-h-[3rem] flex-wrap gap-1.5 rounded-md border-2 border-dashed border-indigo-200 bg-white p-2" data-zone="pool" role="button" tabindex="0">$chips</div>}
@@ -594,7 +736,7 @@ sub jr_widget {
             my $h = qq{<div><p class="mb-1 text-[11px] font-bold $cls">$label</p>};
             $h .= qq{<div class="kb-row mb-1 flex items-stretch gap-1.5" data-side="$s">}
                 . qq{<button type="button" class="kb-slot min-w-0 flex-1 truncate rounded border border-dashed border-gray-300 bg-gray-50 px-2 py-1.5 text-left text-sm text-gray-400" data-acct="">勘定科目</button>}
-                . qq{<input type="text" inputmode="numeric" autocomplete="off" aria-label="${label}の金額" placeholder="金額" class="kb-amt w-28 flex-none rounded border border-gray-300 bg-white px-2 py-1.5 text-right text-sm tabular-nums">}
+                . qq{<input type="text" inputmode="numeric" autocomplete="off" aria-label="${label}の金額" placeholder="金額" class="kb-amt w-28 flex-none rounded border border-gray-300 bg-white px-2 py-1.5 text-right text-base tabular-nums sm:text-sm">}
                 . '</div>' for 1 .. $rows;
             return $h . '</div>';
         };
@@ -604,20 +746,361 @@ sub jr_widget {
         $k++;
     }
     my $data = esc(JSON::PP->new->canonical(1)->encode([ map { { d => $_->{d}, c => $_->{c} } } @js ]));
-    return qq{<div class="kb-jr my-5 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 sm:p-4" data-kb="journal" data-answer="$data">$KB_SAFE}
+    return qq{<div class="kb-jr my-5 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 sm:p-4" data-kb="journal" data-answer="$data"} . kb_attrs() . qq{>$KB_SAFE}
          . qq{<p class="mb-1 text-[11px] font-bold tracking-[0.25em] text-indigo-600">TRY ― 仕訳を入力して答え合わせ</p>}
          . qq{<p class="mb-2 text-xs leading-relaxed text-gray-600">勘定科目をドラッグで記入欄へ（またはタップしてから記入欄をタップ）。金額も入力しよう。記入済みの欄をタップすると消せる。</p>}
          . qq{<div class="kb-pool flex flex-wrap gap-1.5" data-zone="pool">$chips</div>}
          . $entries . kb_buttons() . '</div>';
 }
 
-sub with_try {    # 問題文 → 入力欄 → 解答（折りたたみ）の順に並べる
+sub node_texts {    # ノード列に含まれる文字列をすべて集める（空欄・参照章の抽出用）
+    my ($nodes) = @_;
+    my @t;
+    for my $n (@$nodes) {
+        my $t = $n->{t};
+        if    ($t eq 'p' || $t eq 'h') { push @t, $n->{text}; }
+        elsif ($t eq 'ul')    { push @t, map { $_->[1] } @{ $n->{items} }; }
+        elsif ($t eq 'ol')    { push @t, @{ $n->{items} }; }
+        elsif ($t eq 'quote') { push @t, @{ $n->{lines} }; }
+        elsif ($t eq 'raw')   { push @t, $n->{arg}, @{ $n->{lines} }; }
+        elsif ($t eq 'box')   { push @t, $n->{arg}, node_texts($n->{kids}); }
+    }
+    return @t;
+}
+
+sub refch {    # 解説の「（第5・9・14章）」から、参照している章のIDを取り出す
+    my %seen;
+    my @ids;
+    for my $s (node_texts(shift)) {
+        while ($s =~ /第(\d+(?:・\d+)*)章/g) {
+            for my $num (split /・/, $1) {
+                my $id = sprintf('ch%02d', $num);
+                push @ids, $id if $META{$id} && !$seen{$id}++;
+            }
+        }
+    }
+    return join ' ', @ids;
+}
+
+# ---- 穴埋め：問題文に [[答え]] / [[ア:答え]] を書くと入力欄になる
+#   数値の答え → 金額の入力欄、文字の答え → 選択式（選択肢は同じ問題の答え＋「<!-- choices: A | B -->」）
+#   [[]] は「何も書かないのが正解」の欄（精算表・試算表で、記入する場所そのものを問う）
+#   同じラベルの空欄は、1か所に入力すると他の同じラベルの欄にも反映される
+my $KB_BLANK = 'kb-blank rounded border border-indigo-300 bg-white px-1.5 py-0.5 text-base font-bold text-gray-900 shadow-inner focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200';
+my $KB_PICK  = 'kb-blank kb-pick inline-flex max-w-full items-center whitespace-nowrap rounded border border-indigo-300 bg-white px-1.5 py-1 font-bold leading-tight text-gray-900 shadow-inner hover:border-indigo-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200';
+
+sub fill_setup {
+    my ($pre, $seed) = @_;
+    my @bl;
+    for my $s (node_texts($pre)) {
+        while ($s =~ /$BLANK_RE/g) { push @bl, trim($2); }
+    }
+    return undef unless @bl;
+    my @choices;
+    for my $n (@$pre) {
+        next unless $n->{t} eq 'html' && $n->{text} =~ /<!--\s*choices:\s*(.*?)\s*-->/;
+        push @choices, map { trim($_) } split /\|/, $1;
+    }
+    my (%o, @opt);
+    my $w = 0;
+    for my $a (@bl) {
+        next if $a eq '';
+        if (is_num($a)) { my $e = blank_em($a); $w = $e if $e > $w; next; }
+        push @opt, $a unless $o{$a}++;
+    }
+    push @opt, grep { !$o{$_}++ } @choices;
+    return { opts => [dshuffle($seed, @opt)], w => ($w || blank_em('1,000,000')) };
+}
+
+sub blank_em {    # 数値の入力欄の幅（em）：太字の数字は約0.56em、カンマ・小数点は約0.32em、余白と枠で約1em
+    my $a = shift // '';
+    my $d = () = $a =~ /\d/g;
+    my $o = () = $a =~ /[,.]/g;
+    my $em = 0.56 * $d + 0.32 * $o + 1.05;
+    return $em < 2.8 ? 2.8 : $em;
+}
+
+sub blank_html {    # inl() から呼ばれる（$lab・$ans はエスケープ済みの文字列。$ch は「15・18」のような復習する章）
+    my ($lab, $ans, $ch) = @_;
+    $lab //= '';
+    $ans = trim($ans // '');
+    my $f = $CTX{fill};
+    if (!$f) {
+        push @WARN, "[$CUR] 空欄 [[$ans]] は、例題・確認問題の問題文の中でだけ使える";
+        return $ans;
+    }
+    my $la   = $lab ne '' ? qq{ data-label="$lab"} : '';
+    my $aria = '空欄' . ($lab ne '' ? "（$lab）" : '');
+    if (defined $ch && $ch ne '') {
+        my @ids = map { sprintf('ch%02d', $_) } grep { /^\d+$/ } split /・/, $ch;
+        push @WARN, "[$CUR] 空欄 [[$ans\@$ch]] の章が存在しない" if grep { !$META{$_} } @ids;
+        $la .= ' data-ch="' . join(' ', @ids) . '"';
+    }
+    if ($ans eq '' || is_num($ans)) {
+        my $v   = $ans eq '' ? '' : amt($ans);
+        my $em = sprintf('%.2f', $CTX{bw} || $f->{w});    # 幅は表の列ごと（なければ問題ごと）の最大にそろえる
+        return qq{<input type="text" inputmode="decimal" autocomplete="off" spellcheck="false" class="$KB_BLANK text-right tabular-nums" style="width:${em}em" data-ans="$v"$la placeholder="$lab" aria-label="$aria">};
+    }
+    # 文字の答え：押すと選択肢の一覧が開くボタン（標準のセレクトは最長の選択肢の幅になり、表からはみ出すため）
+    return qq{<button type="button" class="$KB_PICK" data-ans="$ans"$la data-value="" aria-haspopup="listbox" aria-expanded="false" aria-label="$aria">}
+         . qq{<span class="kb-pv text-indigo-300">} . ($lab ne '' ? $lab : '選択') . qq{</span><span aria-hidden="true" class="ml-1 text-[9px] text-indigo-400">▼</span></button>};
+}
+
+sub fill_footer {
+    return qq{<div class="mt-5 rounded-lg border border-indigo-200 bg-indigo-50/60 px-3 pb-3 pt-2.5 sm:px-4">}
+         . qq{<p class="text-[11px] font-bold tracking-[0.25em] text-indigo-600">TRY ― 空欄を埋めて答え合わせ</p>}
+         . kb_buttons()
+         . qq{<span class="hidden absolute z-50 max-h-[50vh] w-max min-w-[9rem] max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-lg border border-gray-200 bg-white p-1 shadow-xl block w-full rounded-md px-3 py-2.5 text-left text-[15px] text-sm font-bold text-gray-800 text-gray-400 hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none bg-indigo-50 text-indigo-700 text-indigo-300"></span>}
+         . '</div>';
+}
+
+sub with_try {    # 問題文（空欄があれば入力式）→ 仕訳の入力欄 → 解答（折りたたみ）の順に並べる
     my ($k, $name, $seed) = @_;
-    my $w = jr_widget($k, $seed);
-    return inner($k, $name) if $w eq '';
     my @pre = grep { !($_->{t} eq 'box' && $_->{name} eq 'answer') } @$k;
     my @ans = grep { $_->{t} eq 'box' && $_->{name} eq 'answer' } @$k;
-    return '<div class="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0">' . rn(\@pre, $name) . $w . rn(\@ans, $name) . '</div>';
+    local $CTX{refch} = refch(\@ans);
+    my $jw = jr_widget($k, $seed);
+    my $fs = fill_setup(\@pre, $seed);
+    return inner($k, $name) if !$fs && $jw eq '';
+    my $body;
+    if ($fs) {
+        local $CTX{fill} = $fs;
+        $NCHK{fill}++ if ($CTX{mode} // '') ne 'all';
+        my $opts = esc(JSON::PP->new->encode($fs->{opts}));
+        $body = qq{<div class="kb-fill" data-kb="fill" data-opts="$opts"} . kb_attrs() . qq{>$KB_SAFE<div class="[&>*:first-child]:mt-0">} . rn(\@pre, $name) . '</div>' . fill_footer() . '</div>';
+    }
+    else {
+        $body = rn(\@pre, $name);
+    }
+    return '<div class="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0">' . $body . $jw . rn(\@ans, $name) . '</div>';
+}
+
+# ---- 補助簿の選択など、「当てはまる欄にチェック」する表
+#   1行目が見出し（左上 | 列1 | 列2 …）、2行目以降は「行の名前 | 正解なら✓ | …」
+sub r_checks {
+    my ($arg, $lines, $ln) = @_;
+    my (@head, @rows);
+    for my $l (@$lines) {
+        next unless $l =~ /\S/;
+        my @c = cells($l);
+        if (!@head) { @head = @c; next; }
+        push @WARN, "[$CUR:$ln] checks: 列数が見出しと一致しない「$l」" if @c != @head;
+        push @rows, \@c;
+    }
+    $NCHK{checks}++ if ($CTX{mode} // '') ne 'all';
+    my $thc = 'bg-gray-800 px-1.5 py-2 text-xs font-bold text-white';
+    my $th  = join '', map { qq{<th scope="col" class="$thc whitespace-nowrap border-l border-gray-600 text-center">} . inl($head[$_]) . '</th>' } 1 .. $#head;
+    my $body = '';
+    for my $r (@rows) {
+        $body .= '<tr class="even:bg-slate-50"><th scope="row" class="border-t border-gray-200 px-3 py-1 text-left text-sm font-bold leading-snug text-gray-800">' . inl($r->[0]) . '</th>';
+        for my $j (1 .. $#head) {
+            my $want = (($r->[$j] // '') =~ /\S/) ? 1 : 0;
+            my $al = esc("$r->[0]（$head[$j]）");
+            $body .= qq{<td class="kb-cell border-l border-t border-gray-200 p-0 text-center"><label class="flex h-11 min-w-[2.75rem] cursor-pointer items-center justify-center">}
+                   . qq{<input type="checkbox" class="kb-ck h-5 w-5 cursor-pointer accent-indigo-600" data-col="$j" data-ans="$want" aria-label="$al"></label></td>};
+        }
+        $body .= '</tr>';
+    }
+    my $foot = '<tr><td class="border-t-2 border-gray-300 px-3 py-1.5 text-[11px] font-bold text-gray-400">判定</td>'
+             . join('', map { qq{<td class="kb-colres border-l border-t-2 border-gray-200 border-t-gray-300 py-1.5 text-center text-sm font-black" data-col="$_"></td>} } 1 .. $#head) . '</tr>';
+    return qq{<div class="kb-checks my-5 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 sm:p-4" data-kb="checks"} . kb_attrs() . qq{>$KB_SAFE}
+         . qq{<p class="mb-1 text-[11px] font-bold tracking-[0.25em] text-indigo-600">TRY ― チェックして答え合わせ</p>}
+         . qq{<p class="mb-3 text-xs leading-relaxed text-gray-600">} . ($arg ne '' ? inl($arg) : '当てはまる欄をすべてチェックしよう。') . '</p>'
+         . qq{<div class="overflow-x-auto rounded-md border border-gray-300 bg-white"><table class="w-full border-collapse"><thead><tr><th scope="col" class="$thc text-left">} . inl($head[0] // '') . qq{</th>$th</tr></thead><tbody>$body</tbody><tfoot>$foot</tfoot></table></div>}
+         . kb_buttons() . '</div>';
+}
+
+# ---- シミュレーター（::sim 種類 タイトル ／ "@expect キー=値" は自己テストで照合する本文の数値）
+my %SIMCOL = (blue => '#2a78d6', orange => '#eb6834', aqua => '#1baf7a', ink => '#52514e');    # 色覚の検証済み（dataviz の参照パレット）
+
+sub sim_range {
+    my ($key, $label, $min, $max, $step, $val, $unit) = @_;
+    return qq{<label class="block"><span class="flex items-baseline justify-between gap-2 text-sm"><span class="font-bold leading-snug text-gray-700">$label</span>}
+         . qq{<span class="flex-none font-black tabular-nums text-gray-900"><output data-show="$key">$val</output><span class="ml-0.5 text-xs font-bold text-gray-500">$unit</span></span></span>}
+         . qq{<input type="range" data-in="$key" min="$min" max="$max" step="$step" value="$val" class="mt-1.5 w-full cursor-pointer accent-teal-600"></label>};
+}
+
+sub sim_field {    # 数値の入力欄・選択欄
+    my ($key, $label, $ctl) = @_;
+    return qq{<label class="block text-sm"><span class="mb-1 block font-bold leading-snug text-gray-700">$label</span>$ctl</label>};
+}
+
+sub sim_select {
+    my ($key, $val, @opts) = @_;    # @opts: [値, 表示]
+    return qq{<select data-in="$key" class="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-base">}
+         . join('', map { qq{<option value="$_->[0]"} . ($_->[0] eq $val ? ' selected' : '') . ">$_->[1]</option>" } @opts) . '</select>';
+}
+
+sub sim_text {
+    my ($key, $val, $unit) = @_;
+    return qq{<span class="flex items-center gap-1.5"><input type="text" inputmode="decimal" data-in="$key" value="$val" autocomplete="off" class="w-full min-w-0 rounded border border-gray-300 bg-white px-2 py-1.5 text-right text-base tabular-nums"><span class="flex-none text-xs font-bold text-gray-500">$unit</span></span>};
+}
+
+sub sim_legend {
+    return '<div class="flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold text-gray-600">'
+         . join('', map { qq{<span class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 rounded-sm" style="background:$SIMCOL{$_->[0]}"></span>$_->[1]</span>} } @_) . '</div>';
+}
+
+my $SIM_TD  = 'border-t border-gray-200 px-2 py-1.5 text-right tabular-nums text-gray-900';
+my $SIM_TH  = 'border-t border-gray-200 px-2 py-1.5 text-left font-bold text-gray-700';
+my $SIM_HD  = 'bg-gray-800 px-2 py-1.5 text-xs font-bold text-white';
+my $SIM_TIP = '<div class="kb-tip pointer-events-none absolute z-10 hidden whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs font-bold text-white shadow-lg"></div>';
+
+sub sim_fifo {    # 第6章：仕入値の動きと、先入先出法・移動平均法の利益
+    my $rows = join '', map {
+        my ($lab, $k, $em) = @$_;
+        my $tr = $em ? ' class="bg-amber-50 font-bold"' : '';
+        qq{<tr$tr><th scope="row" class="$SIM_TH">$lab</th><td class="$SIM_TD" data-out="fifo.$k"></td><td class="$SIM_TD" data-out="avg.$k"></td><td class="$SIM_TD text-gray-600" data-out="diff.$k"></td></tr>};
+    } (['売上高', 'sales'], ['売上原価', 'cogs'], ['売上総利益', 'gp', 1], ['月末在庫', 'end'], ['売上原価＋月末在庫', 'total']);
+    my $bar = sub {
+        my ($m, $lab) = @_;
+        return qq{<div class="mt-3 first:mt-0"><p class="mb-1 text-xs font-bold text-gray-700">$lab</p><div class="flex h-7 w-full gap-[2px]">}
+             . qq{<div class="flex min-w-0 items-center overflow-visible rounded-[4px] px-2 text-xs font-bold text-white transition-all" style="background:$SIMCOL{orange}" data-seg="$m.cogs" tabindex="0"></div>}
+             . qq{<div class="flex min-w-0 items-center rounded-[4px] px-2 text-xs font-bold text-white transition-all" style="background:$SIMCOL{blue}" data-seg="$m.end" tabindex="0"></div></div></div>};
+    };
+    return qq{<p class="mb-3 text-xs leading-relaxed text-gray-600">本章の10月の取引（月初在庫200kg、仕入れ300kg×2回、販売400kg・250kg、売価は1kgあたり1,800円）はそのままに、仕入値の動きだけを変えてみよう。</p>}
+         . qq{<div class="rounded-md border border-gray-200 bg-white p-3">} . sim_range('d', '仕入れ1回ごとの値動き（1kgあたり）', -300, 300, 50, 200, '円')
+         . qq{<p class="mt-2 text-xs leading-relaxed text-gray-500" data-out="prices"></p></div>}
+         . qq{<div class="mt-3 overflow-x-auto rounded-md border border-gray-200 bg-white"><table class="w-full min-w-[20rem] border-collapse text-sm"><thead><tr><th class="$SIM_HD text-left">単位：円</th><th class="$SIM_HD text-right">先入先出法</th><th class="$SIM_HD text-right">移動平均法</th><th class="$SIM_HD text-right">差</th></tr></thead><tbody>$rows</tbody></table></div>}
+         . qq{<div class="kb-chart relative mt-3 rounded-md border border-gray-200 bg-white p-3">$SIM_TIP<p class="mb-2 text-xs font-bold text-gray-500">売ることができた肉の原価（月初在庫＋仕入れ）の切り分け</p>}
+         . $bar->('fifo', '先入先出法') . $bar->('avg', '移動平均法')
+         . '<div class="mt-3">' . sim_legend([orange => '売上原価（売れた分）'], [blue => '月末在庫（残った分）']) . '</div></div>'
+         . qq{<p class="mt-3 text-sm leading-relaxed text-gray-800" data-out="msg"></p>};
+}
+
+sub sim_ccc {    # 第7章：CCCと運転資金
+    my $inputs = '<div class="grid gap-4 sm:grid-cols-2">'
+        . sim_range('sales', '月商', 1000, 30000, 500, 15000, '万円')
+        . sim_range('cr', '原価率（売上に占める仕入の割合）', 50, 95, 1, 80, '%')
+        . sim_range('rec', '売掛金の回収日数（売ってから入金まで）', 0, 120, 1, 45, '日')
+        . sim_range('inv', '在庫の保有日数（仕入れてから売るまで）', 0, 60, 1, 10, '日')
+        . sim_range('pay', '買掛金の支払日数（仕入れてから支払いまで）', 0, 120, 1, 20, '日')
+        . sim_range('g', '来期の売上の伸び', 0, 100, 5, 50, '%')
+        . '</div>';
+    my $kpi = sub {
+        my ($lab, $k, $unit) = @_;
+        return qq{<div class="rounded-lg border border-gray-200 bg-white p-3"><p class="text-[11px] font-bold leading-snug text-gray-500">$lab</p><p class="mt-1 text-xl font-black leading-tight text-gray-900"><span data-out="$k"></span><span class="ml-0.5 text-xs font-bold text-gray-500">$unit</span></p></div>};
+    };
+    my $rows = join '', map {
+        my ($lab, $k, $note, $em) = @$_;
+        my $tr = $em ? ' class="bg-amber-50 font-bold"' : '';
+        qq{<tr$tr><th scope="row" class="$SIM_TH">$lab<span class="block text-[11px] font-normal text-gray-500">$note</span></th><td class="$SIM_TD align-top" data-out="$k"></td></tr>};
+    } (['売掛金', 'ar', '月商×回収日数÷30'], ['在庫', 'stock', '月商×原価率×保有日数÷30'], ['買掛金（差し引く）', 'ap', '月商×原価率×支払日数÷30'], ['運転資金（立て替えているお金）', 'wc', '売掛金＋在庫－買掛金', 1]);
+    my $lane = sub {
+        my ($lab, $inner) = @_;
+        return qq{<div class="flex items-center gap-2"><p class="w-[4.5rem] flex-none text-[11px] font-bold leading-tight text-gray-600">$lab</p><div class="relative h-6 flex-1">$inner</div></div>};
+    };
+    my $seg = sub {
+        my ($k, $col) = @_;
+        return qq{<div class="absolute inset-y-0 rounded-[4px] transition-all" style="background:$SIMCOL{$col}" data-seg="$k" tabindex="0"></div>};
+    };
+    return qq{<p class="mb-3 text-xs leading-relaxed text-gray-600">初期値は洛北ミートの現在の数字（月商1億5,000万円、回収45日・在庫10日・支払20日、原価率80%）。1か月＝30日として計算する。</p>}
+         . qq{<div class="rounded-md border border-gray-200 bg-white p-3">$inputs</div>}
+         . '<div class="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3">' . $kpi->('CCC（立て替えている日数）', 'ccc', '日') . $kpi->('運転資金', 'wc2', '万円') . '<div class="col-span-2 sm:col-span-1">' . $kpi->('売上が伸びると増える運転資金', 'grow', '万円') . '</div></div>'
+         . qq{<div class="kb-chart relative mt-3 rounded-md border border-gray-200 bg-white p-3">$SIM_TIP<p class="mb-3 text-xs font-bold text-gray-500">仕入れた日を0日目とした、お金の出入り</p><div class="space-y-2">}
+         . $lane->('仕入→販売→入金', $seg->('stock', 'aqua') . $seg->('ar', 'blue'))
+         . $lane->('仕入→支払', $seg->('ap', 'orange'))
+         . $lane->('立て替え', $seg->('gap', 'ink'))
+         . qq{</div><div class="relative ml-[5rem] mt-1 h-4 border-t border-[#c3c2b7] text-[10px] tabular-nums text-[#898781]" data-out="axis"></div>}
+         . '<div class="mt-2">' . sim_legend([aqua => '在庫'], [blue => '売掛金'], [orange => '買掛金'], [ink => '立て替え期間（CCC）']) . '</div></div>'
+         . qq{<div class="mt-3 overflow-x-auto rounded-md border border-gray-200 bg-white"><table class="w-full border-collapse text-sm"><thead><tr><th class="$SIM_HD text-left">内訳</th><th class="$SIM_HD text-right">金額（万円）</th></tr></thead><tbody>$rows</tbody></table></div>}
+         . qq{<p class="mt-3 text-sm leading-relaxed text-gray-800" data-out="msg"></p>}
+         . qq{<span class="hidden absolute top-0.5 -translate-x-1/2 whitespace-nowrap"></span>};
+}
+
+sub sim_dep {    # 第12章：定額法と定率法
+    my $years = sim_select('n', '5', map { [$_, "${_}年"] } 2 .. 10);
+    my $months = sim_select('m', '12', map { [$_, "${_}か月"] } reverse 1 .. 12);
+    my $inputs = '<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">'
+        . '<div class="col-span-2 sm:col-span-1">' . sim_field('cost', '取得原価', sim_text('cost', '1,000,000', '円')) . '</div>'
+        . sim_field('n', '耐用年数', $years)
+        . sim_field('m', '1年目の使用月数', $months)
+        . sim_field('res', '残存価額（定額法）', sim_select('res', '0', ['0', 'ゼロ'], ['10', '取得原価の10%']))
+        . sim_field('rate', '償却率（定率法）', sim_text('rate', '40', '%'))
+        . '</div><p class="mt-2 text-[11px] leading-relaxed text-gray-500">償却率は、耐用年数を変えると「1÷耐用年数×2」（200%定率法の考え方）に自動で合わせる。問題で指示された率に書き換えてもよい。</p>';
+    return qq{<p class="mb-3 text-xs leading-relaxed text-gray-600">初期値は本章のトレッドミル（取得原価1,000,000円・償却率40%）。耐用年数5年・残存価額ゼロの定額法と比べてみよう。</p>}
+         . qq{<div class="rounded-md border border-gray-200 bg-white p-3">$inputs</div>}
+         . qq{<div class="kb-chart relative mt-3 rounded-md border border-gray-200 bg-white p-3">$SIM_TIP<div class="mb-2 flex flex-wrap items-baseline justify-between gap-2"><p class="text-xs font-bold text-gray-500">各年の減価償却費</p>} . sim_legend([blue => '定額法'], [orange => '定率法']) . '</div>'
+         . qq{<div class="relative h-44" data-out="chart"></div><div class="relative mt-1 h-4 text-[10px] tabular-nums text-[#898781]" data-out="xaxis"></div></div>}
+         . qq{<div class="mt-3 overflow-x-auto rounded-md border border-gray-200 bg-white"><table class="w-full border-collapse text-xs sm:text-sm"><thead><tr><th rowspan="2" class="$SIM_HD text-left align-bottom">年</th><th colspan="2" class="$SIM_HD border-l border-gray-600 text-center">定額法</th><th colspan="2" class="$SIM_HD border-l border-gray-600 text-center">定率法</th></tr>}
+         . qq{<tr><th class="$SIM_HD border-l border-gray-600 text-right">償却費</th><th class="$SIM_HD text-right">期末の帳簿価額</th><th class="$SIM_HD border-l border-gray-600 text-right">償却費</th><th class="$SIM_HD text-right">期末の帳簿価額</th></tr></thead><tbody data-out="rows"></tbody></table></div>}
+         . qq{<p class="mt-3 text-sm leading-relaxed text-gray-800" data-out="msg"></p>}
+         . qq{<span class="hidden $SIM_TD $SIM_TH bg-amber-50 font-bold border-l text-gray-600 px-1.5 sm:px-2 whitespace-nowrap"></span>};
+}
+
+sub r_sim {
+    my ($arg, $lines, $ln) = @_;
+    my ($type, $title) = $arg =~ /^(\w+)\s*(.*)$/ ? ($1, $2) : ('', '');
+    my %exp;
+    for my $l (@$lines) {
+        next unless $l =~ /\S/;
+        if ($l =~ /^\@expect\s+(.*)$/) {
+            for my $kv (split /\s+/, $1) {
+                my ($k, $v) = split /=/, $kv, 2;
+                $exp{$k} = 0 + $v;
+            }
+            next;
+        }
+        push @WARN, "[$CUR:$ln] sim: 解釈できない行「$l」";
+    }
+    my %R = (fifo => \&sim_fifo, ccc => \&sim_ccc, dep => \&sim_dep);
+    if (!$R{$type}) { push @WARN, "[$CUR:$ln] sim: 不明な種類「$type」"; return ''; }
+    push @WARN, "[$CUR:$ln] sim: \@expect がない（本文の数値との照合ができない）" unless %exp;
+    $NCHK{sim}++ if ($CTX{mode} // '') ne 'all';
+    my $ex = esc(JSON::PP->new->canonical(1)->encode(\%exp));
+    return qq{<figure class="kb-sim my-8 rounded-lg border border-teal-200 bg-teal-50/50 p-4 sm:p-5" data-sim="$type" data-expect="$ex">}
+         . qq{<p class="mb-1 text-[11px] font-bold tracking-[0.25em] text-teal-700">SIMULATOR ― 数字を動かしてみよう</p>}
+         . ($title ne '' ? '<p class="mb-3 font-bold leading-snug text-gray-900">' . inl($title) . '</p>' : '')
+         . $R{$type}->() . '</figure>';
+}
+
+# ---- 模擬試験モード（::mock 制限時間（分） ／ "大問の見出し | 配点"）
+#   見出し（##）がその文字列で始まる大問の演習を、まとめて採点する。
+#   大問の得点＝配点×正解した設問の数÷設問の数（仕訳は1問、空欄は1つ（同じラベルはまとめて1つ）、分類は空欄1つ、チェック表は1列が1設問）
+sub r_mock {
+    my ($arg, $lines, $ln) = @_;
+    my $min = ($arg =~ /(\d+)/) ? $1 : 60;
+    my @secs;
+    for my $l (@$lines) {
+        next unless $l =~ /\S/;
+        my ($k, $p) = map { trim($_) } split /\|/, $l;
+        push @secs, { k => $k, p => 0 + ($p // 0) };
+    }
+    my $tot = 0;
+    $tot += $_->{p} for @secs;
+    push @WARN, "[$CUR:$ln] mock: 配点の合計が100点ではない（${tot}点）" if $tot != 100;
+    my %chl = map { $_ => "$META{$_}{num} $META{$_}{subtitle}" } grep { /^ch\d\d$/ } @{ $CTX{ids} };
+    my $cfg = esc(JSON::PP->new->canonical(1)->encode({ min => 0 + $min, pass => 70, secs => \@secs, ch => \%chl }));
+    my $rows = join '', map {
+        my $k = esc($_->{k});
+        qq{<tr data-s="$k"><th scope="row" class="whitespace-nowrap border-t border-gray-200 py-2 pr-3 text-left font-bold text-gray-800">$k</th>}
+      . qq{<td class="whitespace-nowrap border-t border-gray-200 py-2 pr-3 text-right font-black tabular-nums text-gray-900" data-r="pts"></td>}
+      . qq{<td class="w-full border-t border-gray-200 py-2"><div class="h-2 rounded-full bg-gray-200"><div class="h-2 rounded-full bg-gray-700" data-r="bar" style="width:0%"></div></div><p class="mt-1 text-[11px] text-gray-500" data-r="det"></p></td></tr>};
+    } @secs;
+    my $btn = 'rounded-md px-3 py-1.5 text-sm font-bold transition';
+    return qq{<section class="kb-mock my-8 rounded-lg border-2 border-gray-900 bg-white p-5 shadow-[6px_6px_0_0_#111827] sm:p-6" data-mock="$cfg">}
+         . label('text-amber-600', 'EXAM MODE ― 模擬試験モード')
+         . qq{<p class="mb-3 font-serif text-xl font-black leading-snug text-gray-900">${min}分で解いて、その場で採点する</p>}
+         . qq{<p class="text-[15px] leading-relaxed text-gray-700">開始すると画面の下に残り時間が出て、各問題の「答え合わせ」と解答・解説が隠れる。第1問は仕訳の入力欄に、第2問・第3問は空欄と分類の欄に答えを入れ、最後に「採点する」を押そう。時間切れになると、その時点の解答で自動的に採点する。</p>}
+         . qq{<div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2"><button type="button" class="kb-mock-start rounded-md bg-gray-900 px-5 py-3 font-black text-white transition hover:bg-gray-700">試験を開始する（${min}分）</button><span class="kb-mock-last text-xs font-bold text-gray-500"></span></div>}
+         . qq{<div class="kb-mock-result mt-6 hidden border-t-2 border-gray-900 pt-5" tabindex="-1">}
+         . label('text-gray-400', 'RESULT ― 採点結果')
+         . qq{<div class="flex flex-wrap items-center gap-x-4 gap-y-2"><p class="font-black text-gray-900"><span class="text-5xl" data-r="total">0</span><span class="ml-1 text-base text-gray-500">/ 100点</span></p><span class="rounded-full px-3 py-1 text-sm font-black" data-r="verdict"></span></div>}
+         . qq{<div class="relative mt-4 h-2.5 rounded-full bg-gray-200"><div class="h-2.5 rounded-full transition-all" data-r="meter" style="width:0%"></div><div class="absolute -bottom-1 -top-1 w-0.5 bg-gray-900" style="left:70%"></div></div>}
+         . qq{<p class="mt-1.5 text-right text-[11px] font-bold text-gray-500" style="padding-right:calc(30% - 2.5rem)">合格ライン70点</p>}
+         . qq{<table class="mt-3 w-full border-collapse text-sm"><tbody>$rows</tbody></table>}
+         . qq{<p class="mt-3 text-sm text-gray-600" data-r="time"></p>}
+         . qq{<div class="mt-4 rounded-lg bg-amber-50 p-4" data-r="review"><p class="mb-2 text-sm font-bold text-gray-900">間違えた問題の章を復習しよう（誤りの多い順）</p><div class="grid gap-2" data-r="links"></div></div>}
+         . qq{<p class="mt-4 text-xs leading-relaxed text-gray-500">各問題の入力欄に、正誤の色がついている。解答・解説を開いて、赤い欄を確認しよう。</p>}
+         . qq{<div class="mt-4 flex flex-wrap gap-2"><button type="button" class="kb-mock-start $btn bg-gray-900 text-white hover:bg-gray-700">もう一度解く</button></div>}
+         . qq{<span class="hidden bg-emerald-600 bg-red-600 bg-amber-500 bg-emerald-100 text-emerald-800 bg-red-100 text-red-800 flex flex-none items-center justify-between gap-3 rounded-md border border-amber-300 bg-white px-3 py-2 text-sm text-xs font-bold text-gray-500 text-gray-800 hover:border-amber-500 text-amber-700 text-red-400"></span>}
+         . '</div></section>'
+         . qq{<div id="kb-timer" class="no-print fixed inset-x-0 bottom-0 z-40 hidden border-t border-gray-700 bg-gray-900/95 text-white backdrop-blur" role="timer" aria-live="off">}
+         . qq{<div class="mx-auto flex max-w-3xl items-center gap-2 px-4 py-2.5 sm:gap-3 sm:px-6"><span class="hidden text-[11px] font-bold tracking-widest text-amber-400 sm:inline">残り時間</span>}
+         . qq{<span class="text-2xl font-black tabular-nums" data-t>${min}:00</span>}
+         . qq{<span class="ml-auto flex items-center gap-1.5 sm:gap-2"><button type="button" class="kb-mock-pause $btn border border-white/30 hover:bg-white/10">一時停止</button>}
+         . qq{<button type="button" class="kb-mock-finish $btn bg-amber-400 font-black text-gray-900 hover:bg-amber-300">採点する</button>}
+         . qq{<button type="button" class="kb-mock-quit $btn text-gray-300 hover:text-white">中止</button></span></div></div>};
 }
 
 sub caption_journal {
@@ -692,9 +1175,21 @@ sub r_taccount {
         push @WARN, "[$CUR:$ln] T勘定「$arg」借方合計 $ls ≠ $tot->[0]" if $lnum && defined $tl && abs($tl - $ls) > 0.001;
         push @WARN, "[$CUR:$ln] T勘定「$arg」貸方合計 $rs ≠ $tot->[1]" if $rnum && defined $tr && abs($tr - $rs) > 0.001;
     }
-    my $td  = 'px-2 py-1.5 align-top text-gray-700';
-    my $tdn = 'whitespace-nowrap px-2 py-1.5 text-right align-top tabular-nums text-gray-900';
-    my $tc  = 'whitespace-nowrap border-b-[3px] border-t border-double border-gray-500 px-2 py-1.5 text-right font-bold tabular-nums text-gray-900';
+    my $blank = grep { /\[\[/ } @$lines;    # 穴埋めの空欄があるときは、スマホでも収まるよう余白と文字を詰める
+    my $bw = 0;
+    for my $l (@$lines) {
+        while ($l =~ /$BLANK_RE/g) { my $a = trim($2); $bw = blank_em($a) if is_num($a) && blank_em($a) > $bw; }
+    }
+    local $CTX{bw} = $bw || undef;
+    my $px  = $blank ? 'px-0.5 sm:px-2' : 'px-2';
+    my $td  = $blank ? "whitespace-nowrap $px py-1.5 align-top text-gray-700" : "$px py-1.5 align-top text-gray-700";
+    my $tdn = "whitespace-nowrap $px py-1.5 text-right align-top tabular-nums text-gray-900";
+    my $tc  = "whitespace-nowrap border-b-[3px] border-t border-double border-gray-500 $px py-1.5 text-right font-bold tabular-nums text-gray-900";
+    my $tx  = sub {    # 摘要：日付はスマホでは小さく上の行に分ける
+        my $s = shift // '';
+        return inl($s) unless $s =~ m{^(\d{1,2}/\d{1,2})\s+(.*)$};
+        return qq{<span class="block text-[11px] leading-tight tabular-nums text-gray-400 sm:mr-1 sm:inline sm:text-xs">$1</span>} . inl($2);
+    };
     my $body = '';
     for my $it (@items) {
         my ($k, @c) = @$it;
@@ -705,12 +1200,13 @@ sub r_taccount {
             next;
         }
         $body .= '<tr class="even:bg-slate-50">'
-               . qq{<td class="$td">} . inl($c[0]) . '</td>'
+               . qq{<td class="$td">} . $tx->($c[0]) . '</td>'
                . qq{<td class="$tdn border-r-2 border-gray-900">} . inl($c[1]) . '</td>'
-               . qq{<td class="$td">} . inl($c[2]) . '</td>'
+               . qq{<td class="$td">} . $tx->($c[2]) . '</td>'
                . qq{<td class="$tdn">} . inl($c[3]) . '</td></tr>';
     }
-    return qq{<figure class="my-6 rounded-lg border border-gray-300 bg-white p-3 shadow-sm sm:p-4"><div class="overflow-x-auto"><table class="w-full min-w-[17rem] border-collapse text-sm">}
+    my ($fp, $fs) = $blank ? ('p-2', 'text-xs sm:text-sm') : ('p-3', 'text-sm');
+    return qq{<figure class="my-6 rounded-lg border border-gray-300 bg-white $fp shadow-sm sm:p-4"><div class="overflow-x-auto"><table class="w-full min-w-[17rem] border-collapse $fs">}
          . qq{<thead><tr><th colspan="4" class="border-b-2 border-gray-900 pb-1.5 text-center text-base font-black text-gray-900">} . inl($arg) . '</th></tr>'
          . qq{<tr class="text-[10px] font-bold tracking-wider"><th colspan="2" class="border-r-2 border-gray-900 px-2 pt-1 text-left text-blue-700">借方</th><th colspan="2" class="px-2 pt-1 text-right text-rose-700">貸方</th></tr></thead>}
          . "<tbody>$body</tbody></table></div></figure>";
@@ -718,12 +1214,16 @@ sub r_taccount {
 
 sub r_table {
     my ($arg, $lines, $ln) = @_;
-    my ($compact, $sumchk) = (0, 0);
-    while ($arg =~ s/^(compact|sum)\s+//) {    # compact: 帳簿など列の多い表 / sum: 最終の強調行＝縦計を検証
-        $compact = 1 if $1 eq 'compact';
-        $sumchk  = 1 if $1 eq 'sum';
+    my ($compact, $sumchk, $split) = (0, 0, 0);
+    # compact: 帳簿など列の多い表 / sum: 最終の強調行＝縦計を検証
+    # split:N: 左N列と残りの列を別の表にする（勘定式の財務諸表。スマホでは上下、PCでは左右に並ぶ）
+    while ($arg =~ s/^(compact|sum|split:(\d+))\s+//) {
+        my ($flag, $n) = ($1, $2);
+        $compact = 1  if $flag eq 'compact';
+        $sumchk  = 1  if $flag eq 'sum';
+        $split   = $n if defined $n;
     }
-    my $pad = $compact ? "px-1.5 py-1.5 text-xs whitespace-nowrap" : "px-2 py-2 sm:px-3";
+    my $pad = $compact ? "px-1.5 py-1.5 text-xs whitespace-nowrap" : $split ? "px-1.5 py-1.5 text-xs sm:px-2.5 sm:text-sm" : "px-2 py-2 sm:px-3";
     my (@group, @head, @rows);
     for my $l (@$lines) {
         next if $l =~ /^\s*$/;
@@ -771,11 +1271,48 @@ sub r_table {
         my ($nn, $ne) = (0, 0);
         for my $r (@rows) {
             my $v = $r->[$c + 1] // '';
-            next if $v eq '';
+            next if unblank($v) eq '';
             $ne++;
             $nn++ if is_num($v);
         }
         $numcol[$c] = ($ne && $nn / $ne >= 0.6) ? 1 : 0;
+    }
+    # 穴埋めの入力欄の幅は列ごとにそろえる（欄の幅が答えの桁数のヒントにならないように）
+    my @bw;
+    for my $r (@rows) {
+        for my $c (1 .. $#$r) {
+            my $s = $r->[$c] // '';
+            while ($s =~ /$BLANK_RE/g) {
+                my $a = trim($2);
+                $bw[$c - 1] = blank_em($a) if is_num($a) && blank_em($a) > ($bw[$c - 1] // 0);
+            }
+        }
+    }
+    my $cell = sub {    # 1つのセル（$i は列番号）
+        my ($v, $i, $extra) = @_;
+        local $CTX{bw} = $bw[$i];
+        my $nm  = is_num($v) || ($numcol[$i] && ($v =~ /^\s*[-―－]\s*$/ || ($v =~ /\[\[/ && unblank($v) eq '')));
+        my $cls = $nm ? 'whitespace-nowrap text-right tabular-nums' : 'min-w-[3.5em] text-left';
+        return qq{<td class="border-t border-gray-200 $pad align-top text-gray-800 $cls$extra">} . inl($v) . '</td>';
+    };
+    if ($split && $split < $ncol && !@group) {
+        my $thc = "bg-gray-800 $pad text-xs font-bold text-white";
+        my $html = '';
+        for my $half ([0, $split - 1], [$split, $ncol - 1]) {
+            my ($a, $b) = @$half;
+            my $th = join '', map { qq{<th class="$thc whitespace-nowrap } . ($numcol[$_] ? 'text-right' : 'text-left') . '">' . inl($head[$_]) . '</th>' } $a .. $b;
+            my $tb = '';
+            for my $r (@rows) {
+                my ($emph, @c) = @$r;
+                my $empty = !grep { ($c[$_] // '') ne '' } $a .. $b;    # 行をそろえるための空行は、スマホでは隠す
+                my $trc = ($emph ? 'bg-amber-50 font-bold' : 'even:bg-slate-50') . ' md:h-11' . ($empty ? ' max-md:hidden' : '');
+                $tb .= qq{<tr class="$trc">} . join('', map { $cell->($c[$_] // '', $_, $numcol[$_] ? '' : ' [word-break:auto-phrase]') } $a .. $b) . '</tr>';
+            }
+            $html .= qq{<div class="overflow-x-auto rounded-lg border border-gray-300 bg-white shadow-sm"><table class="w-full border-collapse text-sm"><thead><tr>$th</tr></thead><tbody>$tb</tbody></table></div>};
+        }
+        my $cap = $arg ne '' ? '<figcaption class="mb-2 text-sm font-bold text-gray-700">' . inl($arg) . '</figcaption>' : '';
+        my $fr  = 'md:grid-cols-[' . $split . 'fr_' . ($ncol - $split) . 'fr]';    # PC（768px以上）では左右に並べ、幅を列数に比例させる
+        return qq{<figure class="my-6">$cap<div class="grid gap-3 $fr md:items-start md:gap-2">$html</div></figure>};
     }
     my $thc = "border-gray-600 bg-gray-800 $pad text-xs font-bold text-white";
     my $thead = '';
@@ -804,11 +1341,7 @@ sub r_table {
         my $trc = $emph ? 'bg-amber-50 font-bold' : 'even:bg-slate-50';
         $tbody .= qq{<tr class="$trc">};
         for my $i (0 .. $#c) {
-            my $v  = $c[$i];
-            my $nm = is_num($v) || ($numcol[$i] && $v =~ /^\s*[-―－]\s*$/);
-            my $cls = $nm ? 'whitespace-nowrap text-right tabular-nums' : 'min-w-[3.5em] text-left';
-            my $bl  = @group && $i > 0 ? ' border-l border-gray-200' : '';
-            $tbody .= qq{<td class="border-t border-gray-200 $pad align-top text-gray-800 $cls$bl">} . inl($v) . '</td>';
+            $tbody .= $cell->($c[$i], $i, @group && $i > 0 ? ' border-l border-gray-200' : '');
         }
         $tbody .= '</tr>';
     }
@@ -1013,6 +1546,10 @@ sub head_html {
   html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   summary { list-style: none; }
   .kb-ghost { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; transform: translate(-50%, -50%); opacity: .95; }
+  /* 模擬試験モード中は、解答・答え合わせを隠す */
+  body.kb-exam .kb-answer, body.kb-exam .kb-check, body.kb-exam .kb-reveal, body.kb-exam .kb-jres, body.kb-exam .kb-result { display: none !important; }
+  body.kb-exam { padding-bottom: 4.5rem; }
+  .kb-blank::placeholder { color: #a5b4fc; font-weight: 700; }
   summary::-webkit-details-marker { display: none; }
   table { font-variant-numeric: tabular-nums; }
   @media print {
@@ -1059,8 +1596,8 @@ sub footer_html {
 HTML
 }
 
-sub script_html {
-    return <<'HTML';
+sub script_html {    # 進捗バー・目次・「続きから」＋ 演習などのスクリプト（assets/kb.js をそのまま埋め込む）
+    return <<'HTML' . "<script>\n$KBJS</script>\n";
 <script>
 (() => {
   const bar = document.getElementById('progress');
@@ -1093,263 +1630,6 @@ sub script_html {
   } catch (e) {}
 })();
 
-// ---- インタラクティブ演習（分類・仕訳） ----
-(() => {
-  if (!document.querySelector('[data-kb]')) return;
-  const SEL = ['ring-2', 'ring-indigo-500', 'ring-offset-1'];
-  const OVER = ['ring-2', 'ring-indigo-400'];
-  const OK = ['!border-emerald-500', '!bg-emerald-50'];    // 元の枠・背景色より優先させる
-  const NG = ['!border-red-500', '!bg-red-50'];
-  const num = (s) => {
-    s = String(s == null ? '' : s)
-      .replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xfee0))
-      .replace(/[,，\s円¥￥]/g, '');
-    return s === '' ? null : Number(s);
-  };
-  const widgetOf = (el) => (el && el.closest ? el.closest('[data-kb]') : null);
-  let selected = null;
-  let drag = null;
-  let suppress = false;
-
-  const select = (chip) => {
-    if (selected) selected.classList.remove(...SEL);
-    selected = chip && chip !== selected ? chip : null;
-    if (selected) selected.classList.add(...SEL);
-  };
-  const result = (w, text, ok) => {
-    const r = w.querySelector('.kb-result');
-    r.textContent = text;
-    r.className = 'kb-result text-sm font-bold ' + (ok === true ? 'text-emerald-600' : ok === false ? 'text-red-600' : 'text-gray-500');
-  };
-  const clearMarks = (w) => {
-    w.querySelectorAll('.kb-chip, .kb-slot, .kb-amt').forEach((el) => el.classList.remove(...OK, ...NG));
-    w.querySelectorAll('.kb-mark').forEach((m) => m.remove());
-    w.querySelectorAll('.kb-jres').forEach((r) => (r.textContent = ''));
-    result(w, '', null);
-    delete w.dataset.ok;
-  };
-  const setSlot = (slot, acct) => {
-    slot.dataset.acct = acct || '';
-    slot.textContent = acct || '勘定科目';
-    slot.classList.toggle('text-gray-400', !acct);
-    slot.classList.toggle('border-dashed', !acct);
-    slot.classList.toggle('text-gray-900', !!acct);
-    slot.classList.toggle('font-bold', !!acct);
-  };
-  const place = (chip, target) => {
-    const w = widgetOf(chip);
-    if (!w || widgetOf(target) !== w) return false;
-    if (w.dataset.kb === 'sort') {
-      const zone = target.closest('[data-zone]');
-      if (!zone) return false;
-      (zone.querySelector('.kb-items') || zone).appendChild(chip);
-    } else {
-      const slot = target.closest('.kb-slot');
-      if (!slot) return false;
-      setSlot(slot, chip.dataset.acct);
-    }
-    clearMarks(w);
-    return true;
-  };
-  const rows = (entry, side) => [...entry.querySelectorAll('.kb-row[data-side="' + side + '"]')];
-
-  const check = (w) => {
-    clearMarks(w);
-    let ok = true;
-    if (w.dataset.kb === 'sort') {
-      const chips = [...w.querySelectorAll('.kb-chip')];
-      let n = 0;
-      chips.forEach((c) => {
-        const good = c.closest('[data-zone]').dataset.zone === c.dataset.ans;
-        c.classList.add(...(good ? OK : NG));
-        if (good) n++;
-        else {
-          const m = document.createElement('span');
-          m.className = 'kb-mark ml-1 text-[11px] font-bold text-red-600';
-          m.textContent = '→ ' + c.dataset.ans;
-          c.appendChild(m);
-        }
-      });
-      ok = n === chips.length;
-      result(w, ok ? '全問正解！' : n + ' / ' + chips.length + ' 正解。赤い項目を見直そう', ok);
-    } else {
-      const ans = JSON.parse(w.dataset.answer);
-      w.querySelectorAll('.kb-entry').forEach((entry, j) => {
-        let good = true;
-        ['d', 'c'].forEach((side) => {
-          const left = ans[j][side].map((e) => e[0] + '|' + e[1]);
-          rows(entry, side).forEach((r) => {
-            const slot = r.querySelector('.kb-slot');
-            const amt = r.querySelector('.kb-amt');
-            if (!slot.dataset.acct && !amt.value.trim()) return;
-            const i = left.indexOf(slot.dataset.acct + '|' + num(amt.value));
-            if (i >= 0) left.splice(i, 1);
-            else good = false;
-            [slot, amt].forEach((el) => el.classList.add(...(i >= 0 ? OK : NG)));
-          });
-          if (left.length) good = false;
-        });
-        const r = entry.querySelector('.kb-jres');
-        r.textContent = good ? '✓ 正解' : '✗ 見直そう';
-        r.className = 'kb-jres text-xs font-bold ' + (good ? 'text-emerald-600' : 'text-red-600');
-        if (!good) ok = false;
-      });
-      result(w, ok ? '全問正解！' : '赤い欄を見直そう（足りない行がある場合もある）', ok);
-    }
-    w.dataset.ok = ok ? '1' : '0';
-  };
-
-  const reveal = (w) => {
-    if (w.dataset.kb === 'sort') {
-      w.querySelectorAll('.kb-chip').forEach((c) => {
-        const zone = w.querySelector('[data-zone="' + CSS.escape(c.dataset.ans) + '"]');
-        if (zone) (zone.querySelector('.kb-items') || zone).appendChild(c);
-      });
-    } else {
-      const ans = JSON.parse(w.dataset.answer);
-      w.querySelectorAll('.kb-entry').forEach((entry, j) => {
-        ['d', 'c'].forEach((side) => {
-          rows(entry, side).forEach((r, i) => {
-            const e = ans[j][side][i];
-            setSlot(r.querySelector('.kb-slot'), e ? e[0] : '');
-            r.querySelector('.kb-amt').value = e ? Number(e[1]).toLocaleString('ja-JP') : '';
-          });
-        });
-      });
-    }
-    clearMarks(w);
-    result(w, '正解を表示しました', null);
-  };
-
-  const reset = (w) => {
-    if (w.dataset.kb === 'sort') {
-      const pool = w.querySelector('.kb-pool');
-      [...w.querySelectorAll('.kb-chip')].sort((a, b) => a.dataset.i - b.dataset.i).forEach((c) => pool.appendChild(c));
-    } else {
-      w.querySelectorAll('.kb-slot').forEach((s) => setSlot(s, ''));
-      w.querySelectorAll('.kb-amt').forEach((i) => (i.value = ''));
-    }
-    clearMarks(w);
-  };
-
-  document.addEventListener('click', (e) => {
-    if (suppress) return;
-    const t = e.target;
-    const w = widgetOf(t);
-    if (!w) return;
-    if (t.closest('.kb-check')) return check(w);
-    if (t.closest('.kb-reveal')) return reveal(w);
-    if (t.closest('.kb-reset')) return reset(w);
-    const chip = t.closest('.kb-chip');
-    if (chip) return select(chip);
-    const slot = t.closest('.kb-slot');
-    if (slot) {
-      if (selected && widgetOf(selected) === w) { place(selected, slot); select(null); }
-      else if (slot.dataset.acct) { setSlot(slot, ''); clearMarks(w); }
-      return;
-    }
-    const zone = t.closest('[data-zone]');
-    if (zone && selected && widgetOf(selected) === w) { place(selected, zone); select(null); }
-  });
-  document.addEventListener('keydown', (e) => {
-    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-zone][role="button"]')) {
-      e.preventDefault();
-      e.target.click();
-    }
-  });
-
-  // ドラッグ（マウス・タッチ共通。HTML5のドラッグはスマホで動かないためポインターで実装）
-  document.addEventListener('pointerdown', (e) => {
-    const chip = e.target.closest && e.target.closest('.kb-chip');
-    if (!chip || e.button > 0) return;
-    drag = { chip, x: e.clientX, y: e.clientY, ghost: null, over: null };
-  });
-  document.addEventListener('pointermove', (e) => {
-    if (!drag) return;
-    if (!drag.ghost) {
-      if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 6) return;
-      const g = drag.chip.cloneNode(true);
-      g.classList.remove(...SEL);
-      g.classList.add('kb-ghost', 'shadow-lg');
-      document.body.appendChild(g);
-      drag.ghost = g;
-      select(null);
-    }
-    e.preventDefault();
-    drag.ghost.style.left = e.clientX + 'px';
-    drag.ghost.style.top = e.clientY + 'px';
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    let over = el && el.closest ? el.closest('.kb-slot') || el.closest('[data-zone]') : null;
-    if (over && widgetOf(over) !== widgetOf(drag.chip)) over = null;
-    if (over !== drag.over) {
-      if (drag.over) drag.over.classList.remove(...OVER);
-      drag.over = over;
-      if (over) over.classList.add(...OVER);
-    }
-  }, { passive: false });
-  const endDrag = () => {
-    if (!drag) return;
-    const d = drag;
-    drag = null;
-    if (!d.ghost) return;
-    d.ghost.remove();
-    if (d.over) { d.over.classList.remove(...OVER); place(d.chip, d.over); }
-    suppress = true;
-    setTimeout(() => (suppress = false), 0);
-  };
-  document.addEventListener('pointerup', endDrag);
-  document.addEventListener('pointercancel', () => {
-    if (drag && drag.ghost) drag.ghost.remove();
-    if (drag && drag.over) drag.over.classList.remove(...OVER);
-    drag = null;
-  });
-
-  // 自己テスト（URL に ?selftest を付けたときだけ動く）
-  if (/[?&]selftest/.test(location.search)) {
-    setTimeout(() => {
-      const ws = [...document.querySelectorAll('[data-kb]')];
-      let pass = 0;
-      const fails = [];
-      const fire = (type, x, y, el) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, button: 0 }));
-      ws.forEach((w, i) => {
-        reset(w);
-        const chip = w.dataset.kb === 'sort'
-          ? w.querySelector('.kb-pool .kb-chip')
-          : [...w.querySelectorAll('.kb-pool .kb-chip')].find((c) => c.dataset.acct === JSON.parse(w.dataset.answer)[0].d[0][0]);
-        const target = w.dataset.kb === 'sort' ? w.querySelector('[data-zone="' + CSS.escape(chip.dataset.ans) + '"]') : w.querySelector('.kb-row[data-side="d"] .kb-slot');
-        target.scrollIntoView({ block: 'center' });
-        const a = chip.getBoundingClientRect();
-        const b = target.getBoundingClientRect();
-        fire('pointerdown', a.x + a.width / 2, a.y + a.height / 2, chip);
-        fire('pointermove', a.x + a.width / 2 + 12, a.y + a.height / 2 + 12, document);
-        fire('pointermove', b.x + b.width / 2, b.y + b.height / 2, document);
-        fire('pointerup', b.x + b.width / 2, b.y + b.height / 2, document);
-        const dragged = w.dataset.kb === 'sort' ? chip.closest('[data-zone]') === target : target.dataset.acct === chip.dataset.acct;
-        reveal(w);
-        check(w);
-        const right = w.dataset.ok === '1';
-        if (w.dataset.kb === 'sort') {
-          const pool = w.querySelector('.kb-pool');
-          pool.appendChild(w.querySelector('.kb-chip'));
-        } else {
-          const amt = w.querySelector('.kb-amt');
-          amt.value = amt.value + '1';
-        }
-        check(w);
-        const wrongDetected = w.dataset.ok === '0';
-        if (dragged && right && wrongDetected) pass++;
-        else fails.push('#' + i + (dragged ? '' : ' drag') + (right ? '' : ' answer') + (wrongDetected ? '' : ' wrong-undetected'));
-        reset(w);
-      });
-      const b = document.createElement('div');
-      b.id = 'kb-selftest';
-      b.textContent = 'SELFTEST ' + (fails.length ? 'NG' : 'OK') + ' : ' + pass + ' / ' + ws.length + (fails.length ? ' ' + fails.join(', ') : '');
-      b.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99;padding:12px;font:bold 16px sans-serif;color:#fff;background:' + (fails.length ? '#dc2626' : '#059669');
-      document.body.appendChild(b);
-      window.scrollTo(0, 0);
-    }, 400);
-  }
-})();
 </script>
 HTML
 }
@@ -1440,7 +1720,12 @@ sub render_body {
     my $id = shift;
     local $CUR  = $id;
     local $SECN = 0;
-    $TOC{$id} = [];
+    local $CTX{h2}    = '';
+    local $CTX{tseen} = {};
+    # 用語のポップアップ：辞典そのもの・仕訳道場・模擬試験（ヒントになる）・表紙では付けない
+    local $CTX{terms} = ($TERMRE && $id !~ /^(?:index|apx-a|apx-c|apx-d)$/) ? 1 : 0;
+    $TOC{$id}   = [];
+    $TUSED{$id} = {};
     my $i = 0;
     my $nodes = parse($BODY{$id}, \$i, 0);
     return rn($nodes, '');
@@ -1453,6 +1738,7 @@ print "未作成（スキップ）: ", join(', ', grep { !-e "$SRC/$_.txt" } @AL
 $CTX{ids} = \@IDS;
 read_source($_) for @IDS;
 read_source('index');
+load_terms();
 
 $RENDERED{$_} = render_body($_) for @IDS;
 
@@ -1461,7 +1747,7 @@ for my $i (0 .. $#IDS) {
     my $id = $IDS[$i];
     my $m  = $META{$id};
     local $CTX{mode} = 'page';
-    my $main = chapter_hero($id) . "\n" . $RENDERED{$id} . "\n" . chapter_nav($i);
+    my $main = chapter_hero($id) . "\n" . $RENDERED{$id} . "\n" . chapter_nav($i) . terms_block([$id], 'page', $id);
     spew("$OUT/$id.html", page_html(
         title => "$m->{num} $m->{subtitle} | $BOOK",
         desc  => "$m->{title} ― $m->{subtitle}。$BOOK_SUB",
@@ -1485,7 +1771,7 @@ if (-e "$SRC/guide.txt") {
         desc  => $META{guide}{lead} // $BOOK_SUB,
         cur   => '',
         mode  => 'page',
-        main  => chapter_hero('guide') . "\n" . $body . "\n" . $cta,
+        main  => chapter_hero('guide') . "\n" . $body . "\n" . $cta . terms_block(['guide'], 'page', ''),
     ));
     $count++;
 }
@@ -1529,6 +1815,7 @@ sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに�
     for my $id (@IDS) {
         $main .= qq{<article id="$id" class="scroll-mt-14 border-t-4 border-gray-900 pt-2 mt-24">} . chapter_hero($id) . "\n" . $RENDERED{$id} . '</article>';
     }
+    $main .= terms_block(\@IDS, 'all', '');
     spew("$OUT/all.html", page_html(
         title => "【全章一気読み版】$BOOK ― $BOOK_SUB",
         desc  => $META{index}{lead} // $BOOK_SUB,
@@ -1548,3 +1835,6 @@ if (@WARN) {
 }
 printf "検証OK: 仕訳 %d 件の貸借一致・T字勘定 %d 件の合計・帳簿/試算表など %d 表の縦計・全表の列数\n",
     $NCHK{journal} // 0, $NCHK{taccount} // 0, $NCHK{table} // 0;
+printf "演習: 仕訳入力 %d・穴埋め %d・分類 %d・チェック表 %d・シミュレーター %d ／ 用語リンク %d 語（辞典 %d 語）\n",
+    $NCHK{try} // 0, $NCHK{fill} // 0, $NCHK{sort} // 0, $NCHK{checks} // 0, $NCHK{sim} // 0,
+    scalar(keys %{ { map { %{ $TUSED{$_} } } keys %TUSED } }), scalar(keys %TERM);
