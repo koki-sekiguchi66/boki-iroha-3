@@ -24,3 +24,6 @@ apx-a
 apx-b
 apx-c
 apx-d
+
+# 公開URL（canonical・OGP・sitemap.xml・robots.txt に使う。独自ドメインに移したらここを書き換える）
+@site https://boki-iroha-3.pages.dev

@@ -4,7 +4,8 @@
 #
 #  使い方:   perl build.pl          （Git Bash などから実行）
 #  入力:     _src/book.txt   … 章の並び（1行1ID）。「@title 書名」などの行で本の設定を変えられる
-#                              （@title @subtitle @hero @mark @start @key @scope。なければ3級の既定値）
+#                              （@title @subtitle @hero @mark @start @key @scope @site。なければ3級の既定値）
+#                              「@site https://…」と書くと、canonical・OGP と sitemap.xml・robots.txt を出力する
 #            _src/index.txt  … 表紙ページの本文
 #            _src/<id>.txt   … 各章の本文（独自マークアップ）
 #  出力:     public/ に index.html / <id>.html / all.html（全章一気読み版）
@@ -69,6 +70,8 @@ my $HERO     = $CFG{hero}     // 'ケースで学ぶ<br>簿記3級';    # 表紙
 my $MARK     = $CFG{mark}     // '簿';                        # ヘッダーの1文字ロゴ
 my $START    = $CFG{start}    // '序章から読む';              # 表紙の「最初の章へ」ボタン
 my $KEY      = $CFG{key}      // 'kb3';                       # localStorage のキーの接頭辞（本ごとに変える）
+my $SITE     = $CFG{site}     // '';                          # 公開URL。canonical・OGP・sitemap.xml・robots.txt に使う（なければ出力しない）
+$SITE =~ s{/+$}{};
 my $SCOPE    = $CFG{scope}    // '出題範囲は日本商工会議所「商工会議所簿記検定試験 出題区分表」（2022年度適用版。2026年度の試験まで適用）に準拠し、2027年4月以降の試験に適用される改定（暫定版）の要点も併記しています。受験前に必ず日本商工会議所の公式情報をご確認ください。';
 $KBJS =~ s/'kb3-/'$KEY-/g;
 
@@ -1585,7 +1588,7 @@ sub nav_list {
 
 # ---------------------------------------------------------------- page shell
 sub head_html {
-    my ($title, $desc) = @_;
+    my ($title, $desc, $path, $noindex) = @_;
     my $h = <<'HTML';
 <!DOCTYPE html>
 <html lang="ja">
@@ -1596,7 +1599,7 @@ sub head_html {
 <meta name="theme-color" content="#111827">
 <title>__TITLE__</title>
 <meta name="description" content="__DESC__">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+__SEO__<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -1634,8 +1637,23 @@ sub head_html {
 </head>
 HTML
     my ($t, $d) = (esc($title), esc($desc));
+    # 検索エンジン・SNS向けの情報（@site が設定されているときだけ出力する）
+    my $seo = $noindex ? qq{<meta name="robots" content="noindex, follow">\n} : '';
+    if ($SITE ne '' && defined $path) {
+        my $url = esc($path eq '' ? "$SITE/" : "$SITE/$path");
+        $seo .= qq{<link rel="canonical" href="$url">\n} unless $noindex;
+        $seo .= qq{<meta property="og:type" content="} . ($path eq '' ? 'website' : 'article') . qq{">\n}
+              . qq{<meta property="og:site_name" content="} . esc($BOOK) . qq{">\n}
+              . qq{<meta property="og:title" content="$t">\n}
+              . qq{<meta property="og:description" content="$d">\n}
+              . qq{<meta property="og:url" content="$url">\n}
+              . qq{<meta property="og:image" content="} . esc("$SITE/icons/icon-192.png") . qq{">\n}
+              . qq{<meta property="og:locale" content="ja_JP">\n}
+              . qq{<meta name="twitter:card" content="summary">\n};
+    }
     $h =~ s/__TITLE__/$t/;
     $h =~ s/__DESC__/$d/;
+    $h =~ s/__SEO__/$seo/;
     return $h;
 }
 
@@ -1710,7 +1728,7 @@ HTML
 sub page_html {
     my (%o) = @_;
     my $rec = $o{record} ? ' data-page="' . esc($o{cur}) . '" data-label="' . esc($o{record}) . '"' : '';
-    return head_html($o{title}, $o{desc})
+    return head_html($o{title}, $o{desc}, $o{path}, $o{noindex})
          . qq{<body id="top"$rec class="bg-stone-50 font-sans text-[16px] text-gray-800 antialiased sm:text-[17px]">\n}
          . qq{<div id="progress" class="no-print fixed left-0 top-0 z-50 h-1 w-0 bg-amber-500"></div>\n}
          . site_header($o{cur}, $o{mode})
@@ -1828,6 +1846,7 @@ for my $i (0 .. $#IDS) {
         mode   => 'page',
         main   => $main,
         record => "$m->{num} $m->{subtitle}",
+        path   => $id,
     ));
     $count++;
 }
@@ -1845,6 +1864,7 @@ if (-e "$SRC/guide.txt") {
         cur   => '',
         mode  => 'page',
         main  => chapter_hero('guide') . "\n" . $body . "\n" . $cta . terms_block(['guide'], 'page', ''),
+        path  => 'guide',
     ));
     $count++;
 }
@@ -1876,6 +1896,7 @@ sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに�
         mode  => 'page',
         top   => cover_top('page'),
         main  => $body,
+        path  => '',
     ));
     $count++;
 }
@@ -1896,8 +1917,21 @@ sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに�
         mode  => 'all',
         top   => cover_top('all'),
         main  => $main,
+        path  => 'all',
+        noindex => 1,    # 各章と内容が重複するので、検索結果には各章のページを出す
     ));
     $count++;
+}
+
+# 検索エンジン向け：sitemap.xml と robots.txt（@site が設定されているときだけ）
+if ($SITE ne '') {
+    my @paths = ('', (-e "$SRC/guide.txt" ? 'guide' : ()), @IDS);    # all.html は noindex なので載せない
+    my $xml = qq{<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n};
+    $xml .= '  <url><loc>' . esc($_ eq '' ? "$SITE/" : "$SITE/$_") . "</loc></url>\n" for @paths;
+    $xml .= "</urlset>\n";
+    spew("$OUT/sitemap.xml", $xml);
+    spew("$OUT/robots.txt", "User-agent: *\nAllow: /\n\nSitemap: $SITE/sitemap.xml\n");
+    $count += 2;
 }
 
 print "生成: $count ファイル\n";

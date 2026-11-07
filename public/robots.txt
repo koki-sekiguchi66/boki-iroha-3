@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://boki-iroha-3.pages.dev/sitemap.xml
