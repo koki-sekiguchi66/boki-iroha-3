@@ -1560,7 +1560,7 @@ sub r_toc {
                    . '<span class="min-w-0 flex-1"><span class="block text-[10px] font-bold tracking-[0.25em] text-[#C8462E] sm:text-[11px]">' . esc($badge) . '</span>'
                    . '<span class="mt-1 block font-serif text-lg font-black leading-snug text-[#1B2430] sm:text-[1.35rem]">' . esc($name) . '</span>'
                    . '<span class="mt-1 block text-xs font-bold text-[#6A707A]">' . esc($sub) . '</span></span>'
-                   . '<span aria-hidden="true" class="flex h-8 w-8 flex-none items-center justify-center border border-[#1B2430]/25 text-base leading-none text-[#1B2430] transition group-open:rotate-45 group-open:border-[#C8462E] group-open:text-[#C8462E]">＋</span></summary>'
+                   . '<span aria-hidden="true" class="flex h-8 w-8 flex-none items-center justify-center border border-[#1B2430]/25 text-base leading-none text-[#1B2430] transition group-open:border-[#C8462E] group-open:text-[#C8462E]"><span class="block transition-transform group-open:rotate-45">＋</span></span></summary>'
                    . '<ol class="mb-5 border-l-2 border-[#C8462E]/50 bg-white/70">';
             for my $id (@$ids) {
                 my $m    = $META{$id};
