@@ -1742,7 +1742,7 @@ sub script_html {    # 進捗バー・目次・「続きから」＋ 演習な�
       cont.href = last.id + '.html';
       cont.querySelector('[data-label]').textContent = last.label;
       cont.classList.remove('hidden');
-      cont.classList.add('flex');
+      cont.classList.add('flex', 'sm:inline-flex');
       // 続きがあるときは「続きから読む」を主役にし、最初から読むボタンは濃い文字の枠ボタンにする（明るい背景でも読める色）
       const start = document.getElementById('cta-start');
       if (start) start.className = 'group inline-flex w-full items-center justify-between gap-6 border border-[#1B2430]/40 bg-white/70 px-6 py-4 font-bold text-[#1B2430] transition hover:border-[#C8462E] hover:text-[#C8462E] sm:w-auto';
@@ -1904,7 +1904,7 @@ sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに�
     my $start = $mode eq 'all' ? "#$IDS[0]" : "$IDS[0].html";
     # 紙・墨・朱の配色で、帳簿の罫線をモチーフにした表紙（グラデーションや角丸は使わない）
     # 配色：紙 #F6F3EC／墨 #1B2430／本文 #3D4551／補足 #6A707A／朱 #C8462E／罫線の紺 #2F4A6D
-    my $cont  = $mode eq 'all' ? '' : qq{<a id="cta-continue" href="$start" class="hidden w-full items-center justify-between gap-3 bg-[#1B2430] px-6 py-4 font-bold text-[#F6F3EC] transition hover:bg-[#C8462E] sm:inline-flex sm:w-auto">続きから読む<span data-label class="text-xs font-normal text-[#F6F3EC]/70"></span><span aria-hidden="true">→</span></a>};
+    my $cont  = $mode eq 'all' ? '' : qq{<a id="cta-continue" href="$start" class="hidden w-full items-center justify-between gap-3 bg-[#1B2430] px-6 py-4 font-bold text-[#F6F3EC] transition hover:bg-[#C8462E] sm:w-auto">続きから読む<span data-label class="text-xs font-normal text-[#F6F3EC]/70"></span><span aria-hidden="true">→</span></a>};
     # 表紙の特徴（book.txt の「@chips A | B | …」で変えられる）。帳簿の1行のように罫線で区切って並べる
     my @chips = split /\s*\|\s*/, ($CFG{chips} // '');
     my $chips = join '', map { qq{<li class="flex items-center gap-2 border-b border-r border-[#1B2430]/12 px-3 py-2.5 text-[12px] font-bold leading-snug text-[#1B2430] sm:px-4 sm:py-3 sm:text-sm"><span aria-hidden="true" class="h-1.5 w-1.5 flex-none bg-[#C8462E]"></span>} . esc($_) . '</li>' } @chips;
@@ -1912,7 +1912,7 @@ sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに�
     my $ruled = 'background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 39px,rgba(47,74,109,.09) 39px,rgba(47,74,109,.09) 40px)';
     return qq{<section class="relative overflow-hidden border-b border-[#1B2430]/10 bg-[#F6F3EC] text-[#1B2430]" style="$ruled">}
          . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-y-0 left-2 flex gap-[3px] sm:left-8 lg:left-[calc(50%-27rem)]"><span class="w-px bg-[#C8462E]/40"></span><span class="w-px bg-[#C8462E]/40"></span></div>}
-         . qq{<div aria-hidden="true" class="pointer-events-none absolute right-6 top-14 hidden h-24 w-24 rotate-[-10deg] items-center justify-center rounded-full border-2 border-[#C8462E]/70 font-serif text-sm font-black leading-tight text-[#C8462E]/80 md:flex lg:right-[calc(50%-27rem)]"><span class="text-center">全範囲<br>収録</span></div>}
+         . qq{<div aria-hidden="true" class="pointer-events-none absolute right-6 top-28 hidden h-24 w-24 rotate-[-10deg] items-center justify-center rounded-full border-2 border-[#C8462E]/70 font-serif text-sm font-black leading-tight text-[#C8462E]/80 md:flex lg:right-[calc(50%-27rem)]"><span class="text-center">全範囲<br>収録</span></div>}
          . qq{<div class="relative mx-auto max-w-3xl px-6 pb-12 pt-10 sm:px-8 sm:pb-20 sm:pt-16">}
          . qq{<p class="flex items-center gap-3 text-[10px] font-bold tracking-[0.35em] text-[#6A707A] sm:text-[11px]"><span>CASE BOOK</span><span class="h-px flex-1 bg-[#1B2430]/20"></span><span>日商簿記 3級</span></p>}
          . $hook

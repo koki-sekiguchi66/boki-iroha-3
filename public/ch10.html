@@ -223,7 +223,7 @@
       cont.href = last.id + '.html';
       cont.querySelector('[data-label]').textContent = last.label;
       cont.classList.remove('hidden');
-      cont.classList.add('flex');
+      cont.classList.add('flex', 'sm:inline-flex');
       // 続きがあるときは「続きから読む」を主役にし、最初から読むボタンは濃い文字の枠ボタンにする（明るい背景でも読める色）
       const start = document.getElementById('cta-start');
       if (start) start.className = 'group inline-flex w-full items-center justify-between gap-6 border border-[#1B2430]/40 bg-white/70 px-6 py-4 font-bold text-[#1B2430] transition hover:border-[#C8462E] hover:text-[#C8462E] sm:w-auto';
