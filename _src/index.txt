@@ -4,7 +4,7 @@
 
 <section class="my-12">
 <p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#C8462E]"><span>FOR READERS</span><span class="h-px flex-1 bg-[#C8462E]/30"></span></p>
-<h2 class="mt-3 font-serif text-2xl font-black leading-snug text-[#1B2430] sm:text-[2rem]">こんな人のための、簿記3級テキスト</h2>
+<h2 class="mt-3 font-serif text-2xl font-black leading-snug text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2rem]">こんな人のための、簿記3級テキスト</h2>
 <div class="mt-6 border-t border-[#1B2430]">
 <div class="hidden grid-cols-2 border-b border-[#1B2430]/30 text-[11px] font-bold tracking-[0.2em] text-[#6A707A] sm:grid"><p class="py-2 sm:border-r sm:border-[#1B2430]/15">借方 ― こんな悩み</p><p class="py-2 pl-5">貸方 ― このテキストの答え</p></div>
 <div class="grid border-b border-[#1B2430]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug sm:text-[17px] text-[#1B2430] sm:border-r sm:border-[#1B2430]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A]">01</span>テキストを開くと、3ページで眠くなる</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-4 sm:pl-5 sm:text-sm">1章ごとに「黒字なのに、なぜ潰れた？」のような事件が起きる。続きが気になるから、気づけば読み進めている。</p></div>
@@ -17,7 +17,7 @@
 
 <section class="my-14">
 <p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#C8462E]"><span>WHY THIS BOOK</span><span class="h-px flex-1 bg-[#C8462E]/30"></span></p>
-<h2 class="mt-3 font-serif text-2xl font-black leading-snug text-[#1B2430] sm:text-[2rem]">このテキストの3つの強み</h2>
+<h2 class="mt-3 font-serif text-2xl font-black leading-snug text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2rem]">このテキストの3つの強み</h2>
 <div class="mt-6 grid gap-7 sm:grid-cols-3 sm:gap-8">
 <div class="border-t border-[#1B2430]/25 pt-5"><span aria-hidden="true" class="block h-0.5 w-8 bg-[#C8462E]"></span><p class="mt-4 font-serif text-lg font-black leading-snug text-[#1B2430]">物語で、ルールの「なぜ」がわかる</p><p class="mt-2 text-sm leading-relaxed text-[#3D4551]">父の定食屋の黒字倒産から始まる、新人・大川ひよりの1年。21の事件の答えが、そのまま3級の論点になっている。</p></div>
 <div class="border-t border-[#1B2430]/25 pt-5"><span aria-hidden="true" class="block h-0.5 w-8 bg-[#C8462E]"></span><p class="mt-4 font-serif text-lg font-black leading-snug text-[#1B2430]">手を動かして、その場で身につく</p><p class="mt-2 text-sm leading-relaxed text-[#3D4551]">すべての例題と確認問題に入力欄。勘定科目を選び、金額を入れて答え合わせ。ネット試験と同じ感覚で練習できる。</p></div>

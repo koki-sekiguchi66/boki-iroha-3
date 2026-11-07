@@ -1904,7 +1904,7 @@ sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに�
     my $start = $mode eq 'all' ? "#$IDS[0]" : "$IDS[0].html";
     # 紙・墨・朱の配色で、帳簿の罫線をモチーフにした表紙（グラデーションや角丸は使わない）
     # 配色：紙 #F6F3EC／墨 #1B2430／本文 #3D4551／補足 #6A707A／朱 #C8462E／罫線の紺 #2F4A6D
-    my $cont  = $mode eq 'all' ? '' : qq{<a id="cta-continue" href="$start" class="hidden w-full items-center justify-between gap-3 bg-[#1B2430] px-6 py-4 font-bold text-[#F6F3EC] transition hover:bg-[#C8462E] sm:w-auto">続きから読む<span data-label class="text-xs font-normal text-[#F6F3EC]/70"></span><span aria-hidden="true">→</span></a>};
+    my $cont  = $mode eq 'all' ? '' : qq{<a id="cta-continue" href="$start" class="hidden w-full items-center justify-between gap-3 bg-[#1B2430] px-6 py-4 font-bold text-[#F6F3EC] transition hover:bg-[#C8462E] sm:w-auto"><span class="min-w-0 text-left"><span class="block whitespace-nowrap">続きから読む</span><span data-label class="mt-0.5 block text-xs font-normal leading-snug text-[#F6F3EC]/70"></span></span><span aria-hidden="true">→</span></a>};
     # 表紙の特徴（book.txt の「@chips A | B | …」で変えられる）。帳簿の1行のように罫線で区切って並べる
     my @chips = split /\s*\|\s*/, ($CFG{chips} // '');
     my $chips = join '', map { qq{<li class="flex items-center gap-2 border-b border-r border-[#1B2430]/12 px-3 py-2.5 text-[12px] font-bold leading-snug text-[#1B2430] sm:px-4 sm:py-3 sm:text-sm"><span aria-hidden="true" class="h-1.5 w-1.5 flex-none bg-[#C8462E]"></span>} . esc($_) . '</li>' } @chips;
