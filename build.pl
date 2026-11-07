@@ -1537,24 +1537,38 @@ sub r_toc {
     my $html = qq{<div id="toc" class="scroll-mt-20">};
     my $part = "\0";
     my $open = 0;
+    if ($compact) {    # 表紙用：部ごとに開閉できる目次（見出しに章の範囲を出す）
+        my @groups;
+        for my $id (@{ $CTX{ids} }) {
+            my $p = $META{$id}{part} // '';
+            push @groups, [$p, []] if !@groups || $groups[-1][0] ne $p;
+            push @{ $groups[-1][1] }, $id;
+        }
+        for my $g (@groups) {
+            my ($p, $ids) = @$g;
+            my ($n1, $n2) = map { $META{$_}{num} // '' } $ids->[0], $ids->[-1];
+            my $range = $n1 eq $n2 ? $n1 : "$n1〜$n2";
+            $html .= '<details class="group mt-2 overflow-hidden rounded-lg border border-gray-200 bg-white">'
+                   . '<summary class="flex cursor-pointer select-none items-center gap-3 px-4 py-3 hover:bg-gray-50">'
+                   . '<span class="min-w-0 flex-1"><span class="block text-[11px] font-bold tracking-[0.2em] text-gray-400">' . esc($p) . '</span>'
+                   . '<span class="block font-bold text-gray-900">' . esc($range) . '<span class="ml-2 text-xs font-medium text-gray-400">' . scalar(@$ids) . '本</span></span></span>'
+                   . '<span aria-hidden="true" class="flex-none text-xs text-gray-400 transition-transform group-open:rotate-180">▼</span></summary>'
+                   . '<ol class="divide-y divide-gray-100 border-t border-gray-100">';
+            for my $id (@$ids) {
+                my $m    = $META{$id};
+                my $href = href_for($id, $CTX{mode} // 'page');
+                $html .= qq{<li><a href="$href" class="group/item flex items-center gap-3 px-4 py-3 transition hover:bg-amber-50">}
+                       . '<span class="w-12 flex-none text-xs font-bold text-gray-400">' . esc($m->{num}) . '</span>'
+                       . '<span class="min-w-0 flex-1 font-bold leading-snug text-gray-900 [word-break:auto-phrase]">' . esc($m->{subtitle}) . '</span>'
+                       . '<span aria-hidden="true" class="flex-none text-lg leading-none text-gray-300 transition group-hover/item:text-amber-500">›</span></a></li>';
+            }
+            $html .= '</ol></details>';
+        }
+        return $html . '</div>';
+    }
     for my $id (@{ $CTX{ids} }) {
         my $m = $META{$id};
         my $p = $m->{part} // '';
-        if ($compact) {
-            if ($p ne $part) {
-                $html .= '</ol></section>' if $open;
-                $part = $p;
-                $html .= '<section class="mt-6"><h3 class="mb-2 px-1 text-[11px] font-bold tracking-[0.2em] text-gray-400">' . esc($p) . '</h3>'
-                       . '<ol class="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">';
-                $open = 1;
-            }
-            my $href = href_for($id, $CTX{mode} // 'page');
-            $html .= qq{<li><a href="$href" class="group flex items-center gap-3 px-4 py-3 transition hover:bg-amber-50">}
-                   . '<span class="w-12 flex-none text-xs font-bold text-gray-400">' . esc($m->{num}) . '</span>'
-                   . '<span class="min-w-0 flex-1 font-bold leading-snug text-gray-900 [word-break:auto-phrase]">' . esc($m->{subtitle}) . '</span>'
-                   . '<span aria-hidden="true" class="flex-none text-lg leading-none text-gray-300 transition group-hover:text-amber-500">›</span></a></li>';
-            next;
-        }
         if ($p ne $part) {
             $html .= '</div></section>' if $open;
             $part = $p;
@@ -1673,8 +1687,8 @@ sub site_header {
          . qq{<details data-dropdown class="relative"><summary class="flex cursor-pointer select-none items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-bold text-gray-700 hover:bg-gray-50">目次<span class="text-[10px] text-gray-400">▼</span></summary>}
          . qq{<nav class="absolute right-0 mt-2 max-h-[75vh] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border border-gray-200 bg-white p-2 shadow-xl">}
          . ($mode eq 'all'
-              ? qq{<a href="index.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">章ごとのページ版へ</a><a href="guide.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">本書の使い方</a>}
-              : qq{<a href="index.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">表紙・目次</a><a href="guide.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">本書の使い方</a><a href="all.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">全章一気読み版（1ファイル）</a>})
+              ? qq{<a href="index.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">章ごとのページ版へ</a><a href="index.html#guide" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">このサイトの使い方</a>}
+              : qq{<a href="index.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">表紙・目次</a><a href="index.html#guide" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">このサイトの使い方</a><a href="all.html" class="block rounded-md px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50">全章一気読み版（1ファイル）</a>})
          . nav_list($cur, $mode)
          . qq{</nav></details></div></div></header>\n};
 }
@@ -1886,7 +1900,7 @@ sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに�
          . qq{<p class="mt-4 font-bold text-amber-300 text-balance [word-break:auto-phrase] sm:text-lg">$BOOK_SUB</p>}
          . qq{<div class="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">$cont}
          . qq{<a id="cta-start" href="$start" class="rounded-md bg-amber-400 px-5 py-3 font-black text-gray-900 transition hover:bg-amber-300">$START →</a>}
-         . qq{<a href="guide.html" class="text-sm font-bold text-gray-300 underline decoration-gray-500 underline-offset-4 transition hover:text-white">はじめての方へ</a></div>}
+         . qq{<a href="#guide" class="text-sm font-bold text-gray-300 underline decoration-gray-500 underline-offset-4 transition hover:text-white">このサイトの使い方</a></div>}
          . qq{</div></section>\n};
 }
 
