@@ -1546,45 +1546,35 @@ sub r_toc {
             push @{ $groups[-1][1] }, $id;
         }
         my $gi = 0;
+        $html .= '<div class="border-t-2 border-[#1c1a17]">';
         for my $g (@groups) {
             my ($p, $ids) = @$g;
             my ($n1, $n2) = map { $META{$_}{num} // '' } $ids->[0], $ids->[-1];
             my $range = $n1 eq $n2 ? $n1 : "$n1〜$n2";
-            # 部ごとに色を変え、部の名前を大きく見せる
-            my @PAL = (
-                ['bg-gray-900',   'text-gray-900',   'border-gray-300'],
-                ['bg-blue-600',   'text-blue-700',   'border-blue-200'],
-                ['bg-emerald-600','text-emerald-700','border-emerald-200'],
-                ['bg-amber-500',  'text-amber-700',  'border-amber-200'],
-                ['bg-rose-600',   'text-rose-700',   'border-rose-200'],
-                ['bg-violet-600', 'text-violet-700', 'border-violet-200'],
-                ['bg-cyan-600',   'text-cyan-700',   'border-cyan-200'],
-                ['bg-indigo-600', 'text-indigo-700', 'border-indigo-200'],
-                ['bg-fuchsia-600','text-fuchsia-700','border-fuchsia-200'],
-                ['bg-stone-700',  'text-stone-700',  'border-stone-300'],
-            );
-            my ($bg, $fg, $bd) = @{ $PAL[$gi++ % @PAL] };
-            my ($badge, $name, $sub);
-            if ($p =~ /^(第\S+部)\s+(.+)$/) { ($badge, $name, $sub) = ($1, $2, "$range・" . scalar(@$ids) . '本'); }
-            elsif (@$ids == 1)              { ($badge, $name, $sub) = ($p, $META{ $ids->[0] }{subtitle} // $range, $range); }
-            else                            { ($badge, $name, $sub) = ($p, $range, scalar(@$ids) . '本'); }
-            $html .= qq{<details class="group mt-3 overflow-hidden rounded-xl border-2 $bd bg-white shadow-sm transition hover:shadow-md">}
-                   . '<summary class="flex cursor-pointer select-none items-center gap-3 px-3 py-3 sm:px-4">'
-                   . qq{<span class="flex-none rounded-lg $bg px-2.5 py-1.5 text-sm font-black tracking-wide text-white sm:text-base">} . esc($badge) . '</span>'
-                   . qq{<span class="min-w-0 flex-1"><span class="block text-lg font-black leading-snug $fg sm:text-xl">} . esc($name) . '</span>'
-                   . '<span class="block text-xs font-bold text-gray-500">' . esc($sub) . '</span></span>'
-                   . '<span aria-hidden="true" class="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-gray-100 text-xs text-gray-500 transition-transform group-open:rotate-180">▼</span></summary>'
-                   . '<ol class="divide-y divide-gray-100 border-t border-gray-100">';
+            # 雑誌の目次のように：左に朱の大きな番号、中央に部の名前、下に章の範囲
+            my ($mark, $badge, $name, $sub);
+            if ($p =~ /^第(\S+)部\s+(.+)$/) { ($mark, $badge, $name, $sub) = ($1, "第$1部", $2, "$range（" . scalar(@$ids) . '章）'); }
+            elsif (@$ids == 1)            { ($mark, $badge, $name, $sub) = (substr($n1, 0, 1), $p, $META{ $ids->[0] }{subtitle} // $range, $range); }
+            else                          { ($mark, $badge, $name, $sub) = (substr($n1, 0, 1), $p, $range, scalar(@$ids) . '本'); }
+            $html .= '<details class="group border-b border-[#1c1a17]/20">'
+                   . '<summary class="flex cursor-pointer select-none items-center gap-4 py-4 pr-1 transition hover:bg-[#f3eee3]/60 sm:gap-5">'
+                   . '<span class="w-10 flex-none text-center font-serif text-4xl font-black leading-none text-[#b8322a] sm:w-12 sm:text-5xl">' . esc($mark) . '</span>'
+                   . '<span class="min-w-0 flex-1"><span class="block text-[11px] font-bold tracking-[0.25em] text-[#6b645a]">' . esc($badge) . '</span>'
+                   . '<span class="mt-0.5 block font-serif text-xl font-black leading-snug text-[#1c1a17] sm:text-2xl">' . esc($name) . '</span>'
+                   . '<span class="mt-0.5 block text-xs font-bold text-[#6b645a]">' . esc($sub) . '</span></span>'
+                   . '<span aria-hidden="true" class="flex h-8 w-8 flex-none items-center justify-center border border-[#1c1a17]/30 font-serif text-lg leading-none text-[#1c1a17] transition group-open:rotate-45">＋</span></summary>'
+                   . '<ol class="mb-4 ml-14 border-l border-[#b8322a]/40 sm:ml-[4.25rem]">';
             for my $id (@$ids) {
                 my $m    = $META{$id};
                 my $href = href_for($id, $CTX{mode} // 'page');
-                $html .= qq{<li><a href="$href" class="group/item flex items-center gap-3 px-4 py-3 transition hover:bg-amber-50">}
-                       . '<span class="w-12 flex-none text-xs font-bold text-gray-400">' . esc($m->{num}) . '</span>'
-                       . '<span class="min-w-0 flex-1 font-bold leading-snug text-gray-900 [word-break:auto-phrase]">' . esc($m->{subtitle}) . '</span>'
-                       . '<span aria-hidden="true" class="flex-none text-lg leading-none text-gray-300 transition group-hover/item:text-amber-500">›</span></a></li>';
+                $html .= qq{<li><a href="$href" class="group/item flex items-baseline gap-3 py-2.5 pl-4 pr-1 transition hover:bg-[#f3eee3]">}
+                       . '<span class="w-14 flex-none text-xs font-bold text-[#6b645a]">' . esc($m->{num}) . '</span>'
+                       . '<span class="min-w-0 flex-1 font-bold leading-snug text-[#1c1a17] [word-break:auto-phrase] group-hover/item:text-[#b8322a]">' . esc($m->{subtitle}) . '</span>'
+                       . '<span aria-hidden="true" class="flex-none text-[#1c1a17]/30 transition group-hover/item:translate-x-0.5 group-hover/item:text-[#b8322a]">→</span></a></li>';
             }
             $html .= '</ol></details>';
         }
+        $html .= '</div>';
         return $html . '</div>';
     }
     for my $id (@{ $CTX{ids} }) {
@@ -1912,21 +1902,25 @@ if (-e "$SRC/guide.txt") {
 sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに絞る
     my $mode  = shift;
     my $start = $mode eq 'all' ? "#$IDS[0]" : "$IDS[0].html";
-    my $cont  = $mode eq 'all' ? '' : qq{<a id="cta-continue" href="$start" class="hidden rounded-full bg-white px-6 py-3.5 font-black text-gray-900 shadow-lg ring-2 ring-white/40 transition hover:-translate-y-0.5 hover:shadow-xl">続きから読む →<span data-label class="mt-0.5 block text-xs font-bold text-gray-600"></span></a>};
-    # 表紙の特徴バッジ（book.txt の「@chips A | B | …」で変えられる）
+    # 紙と墨と朱の「帳簿」をモチーフにした表紙（グラデーションや角丸は使わない）
+    my $cont  = $mode eq 'all' ? '' : qq{<a id="cta-continue" href="$start" class="hidden border border-[#1c1a17] bg-[#fbf8f1] px-6 py-3.5 font-bold text-[#1c1a17] transition hover:bg-white">続きから読む →<span data-label class="mt-0.5 block text-xs font-normal text-[#6b645a]"></span></a>};
+    # 表紙の特徴（book.txt の「@chips A | B | …」で変えられる）。帳簿の1行のように罫線で区切って並べる
     my @chips = split /\s*\|\s*/, ($CFG{chips} // '');
-    my $chips = join '', map { qq{<span class="rounded-full bg-white/15 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/30 backdrop-blur sm:text-sm">} . esc($_) . '</span>' } @chips;
-    my $hook  = $CFG{hook} ? qq{<p class="inline-block -rotate-1 rounded-lg bg-yellow-300 px-3 py-1.5 text-sm font-black text-gray-900 shadow-md sm:text-base">} . esc($CFG{hook}) . '</p>' : '';
-    return qq{<section class="relative overflow-hidden bg-gradient-to-br from-indigo-950 via-violet-800 to-fuchsia-600 text-white">}
-         . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-0"><div class="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-amber-400/40 blur-3xl"></div><div class="absolute -bottom-32 right-[-6rem] h-96 w-96 rounded-full bg-pink-500/40 blur-3xl"></div><div class="absolute right-[8%] top-10 rotate-6 font-serif text-6xl font-black text-white/10 sm:text-8xl">借方｜貸方</div></div>}
-         . qq{<div class="relative mx-auto max-w-3xl px-4 pb-14 pt-14 sm:px-6 sm:pb-20 sm:pt-20">}
+    my $chips = join '', map { qq{<li class="border-b border-r border-[#1c1a17]/20 px-3 py-2.5 text-[13px] font-bold leading-snug text-[#1c1a17]"><span class="mr-1.5 font-serif text-[#b8322a]">✓</span>} . esc($_) . '</li>' } @chips;
+    my $hook  = $CFG{hook} ? qq{<p class="mt-8 max-w-xl border-l-2 border-[#b8322a] pl-4 font-serif text-lg leading-relaxed text-[#b8322a] sm:text-xl">} . esc($CFG{hook}) . '</p>' : '';
+    my $ruled = 'background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 35px,rgba(40,70,120,.10) 35px,rgba(40,70,120,.10) 36px)';
+    return qq{<section class="relative overflow-hidden border-b border-[#1c1a17]/15 bg-[#f3eee3] text-[#1c1a17]" style="$ruled">}
+         . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-y-0 left-3 flex gap-[3px] sm:left-8"><span class="w-px bg-[#b8322a]/45"></span><span class="w-px bg-[#b8322a]/45"></span></div>}
+         . qq{<div aria-hidden="true" class="pointer-events-none absolute right-5 top-16 hidden h-24 w-24 rotate-[-12deg] items-center justify-center rounded-full border-[3px] border-[#b8322a]/80 font-serif text-[15px] font-black leading-tight text-[#b8322a]/85 sm:flex"><span class="text-center">全範囲<br>収録</span></div>}
+         . qq{<div class="relative mx-auto max-w-3xl px-6 pb-14 pt-12 sm:px-8 sm:pb-20 sm:pt-16">}
+         . qq{<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#6b645a]"><span>CASE BOOK</span><span class="h-px flex-1 bg-[#1c1a17]/25"></span><span>日商簿記 3級</span></p>}
          . $hook
-         . qq{<h1 class="mt-5 font-serif text-[2.8rem] font-black leading-[1.15] drop-shadow-sm sm:text-7xl">$HERO</h1>}
-         . qq{<p class="mt-4 font-bold text-amber-200 text-balance [word-break:auto-phrase] sm:text-lg">$BOOK_SUB</p>}
-         . ($chips ? qq{<div class="mt-6 flex flex-wrap gap-2">$chips</div>} : '')
-         . qq{<div class="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">$cont}
-         . qq{<a id="cta-start" href="$start" class="rounded-full bg-gradient-to-r from-amber-300 to-yellow-400 px-7 py-3.5 text-lg font-black text-gray-900 shadow-lg shadow-amber-500/30 transition hover:-translate-y-0.5 hover:shadow-xl">$START →</a>}
-         . qq{<a href="#guide" class="text-sm font-bold text-white/80 underline decoration-white/40 underline-offset-4 transition hover:text-white">このサイトの使い方</a></div>}
+         . qq{<h1 class="mt-6 font-serif text-[2.9rem] font-black leading-[1.12] tracking-tight sm:text-7xl">$HERO</h1>}
+         . qq{<p class="mt-5 max-w-xl text-[15px] font-bold leading-relaxed text-[#4a453e] text-balance [word-break:auto-phrase] sm:text-base">$BOOK_SUB</p>}
+         . ($chips ? qq{<ul class="mt-8 grid grid-cols-2 border-l border-t border-[#1c1a17]/20 bg-[#fbf8f1]/70 sm:grid-cols-3">$chips</ul>} : '')
+         . qq{<div class="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">$cont}
+         . qq{<a id="cta-start" href="$start" class="group inline-flex items-center gap-3 bg-[#1c1a17] px-7 py-4 font-bold tracking-wide text-[#f3eee3] transition hover:bg-[#b8322a]">$START<span aria-hidden="true" class="transition group-hover:translate-x-1">→</span></a>}
+         . qq{<a href="#guide" class="border-b border-[#1c1a17]/40 pb-0.5 text-sm font-bold text-[#1c1a17] transition hover:border-[#b8322a] hover:text-[#b8322a]">このサイトの使い方</a></div>}
          . qq{</div></section>\n};
 }
 

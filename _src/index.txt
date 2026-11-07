@@ -2,26 +2,27 @@
 
 <div id="guide" class="scroll-mt-20"></div>
 
-<section class="my-8 rounded-2xl bg-gradient-to-br from-amber-100 via-pink-100 to-violet-200 p-4 sm:p-7">
-<p class="text-xs font-black tracking-[0.3em] text-fuchsia-600">FOR YOU</p>
-<h2 class="mt-1 font-serif text-2xl font-black leading-snug text-gray-900 sm:text-3xl">こんな人のための、簿記3級テキスト</h2>
-<div class="mt-5 grid gap-3 sm:grid-cols-2">
-<div class="rounded-xl bg-white p-4 shadow-sm ring-2 ring-amber-200"><p class="text-2xl">😪</p><p class="mt-1 font-black leading-snug text-gray-900">テキストを開くと、3ページで眠くなる</p><p class="mt-1 text-sm leading-relaxed text-gray-600">1章ごとに「黒字なのに、なぜ潰れた？」のような事件が起きる。続きが気になるから、気づけば読み進めている。</p></div>
-<div class="rounded-xl bg-white p-4 shadow-sm ring-2 ring-pink-200"><p class="text-2xl">🤯</p><p class="mt-1 font-black leading-snug text-gray-900">仕訳を丸暗記しては、すぐ忘れる</p><p class="mt-1 text-sm leading-relaxed text-gray-600">「なぜ借方なのか」を、事件の謎解きの中で理解する。理由で覚えた仕訳は、本番でも崩れない。</p></div>
-<div class="rounded-xl bg-white p-4 shadow-sm ring-2 ring-violet-200"><p class="text-2xl">🤔</p><p class="mt-1 font-black leading-snug text-gray-900">独学だと、合っているのか分からない</p><p class="mt-1 text-sm leading-relaxed text-gray-600">仕訳入力164問・穴埋め・分類問題。その場で答え合わせができ、間違えた理由まで解説する。</p></div>
-<div class="rounded-xl bg-white p-4 shadow-sm ring-2 ring-sky-200"><p class="text-2xl">⏰</p><p class="mt-1 font-black leading-snug text-gray-900">本番で時間が足りなくなりそう</p><p class="mt-1 text-sm leading-relaxed text-gray-600">本試験と同じ形式の模擬試験を、60分タイマーと自動採点で。大問ごとの得点と、復習すべき章が分かる。</p></div>
-<div class="rounded-xl bg-white p-4 shadow-sm ring-2 ring-emerald-200"><p class="text-2xl">💼</p><p class="mt-1 font-black leading-snug text-gray-900">簿記を、仕事や就活に生かしたい</p><p class="mt-1 text-sm leading-relaxed text-gray-600">倒産・粉飾・横領など実際の事件を、学んだ仕訳で読み解く。経営者や銀行員の立場で判断する発展問題つき。</p></div>
-<div class="rounded-xl bg-white p-4 shadow-sm ring-2 ring-rose-200"><p class="text-2xl">📅</p><p class="mt-1 font-black leading-snug text-gray-900">2027年4月の改定が気になる</p><p class="mt-1 text-sm leading-relaxed text-gray-600">いまの出題範囲を完全にカバーしたうえで、改定で加わる論点・外れる論点に印をつけている。</p></div>
+<section class="my-12">
+<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#b8322a]"><span>FOR READERS</span><span class="h-px flex-1 bg-[#b8322a]/30"></span></p>
+<h2 class="mt-3 font-serif text-[1.7rem] font-black leading-snug text-[#1c1a17] sm:text-3xl">こんな人のための、簿記3級テキスト</h2>
+<div class="mt-6 border-t-2 border-[#1c1a17]">
+<div class="hidden grid-cols-2 border-b border-[#1c1a17]/30 text-[11px] font-bold tracking-[0.2em] text-[#6b645a] sm:grid"><p class="py-2 sm:border-r sm:border-[#1c1a17]/15">借方 ― こんな悩み</p><p class="py-2 pl-5">貸方 ― このテキストの答え</p></div>
+<div class="grid border-b border-[#1c1a17]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-[17px] font-black leading-snug text-[#1c1a17] sm:border-r sm:border-[#1c1a17]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6b645a]">01</span>テキストを開くと、3ページで眠くなる</p><p class="pb-4 pl-8 text-sm leading-relaxed text-[#4a453e] sm:py-4 sm:pl-5">1章ごとに「黒字なのに、なぜ潰れた？」のような事件が起きる。続きが気になるから、気づけば読み進めている。</p></div>
+<div class="grid border-b border-[#1c1a17]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-[17px] font-black leading-snug text-[#1c1a17] sm:border-r sm:border-[#1c1a17]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6b645a]">02</span>仕訳を丸暗記しては、すぐ忘れる</p><p class="pb-4 pl-8 text-sm leading-relaxed text-[#4a453e] sm:py-4 sm:pl-5">「なぜ借方なのか」を、事件の謎解きの中で理解する。理由で覚えた仕訳は、本番でも崩れない。</p></div>
+<div class="grid border-b border-[#1c1a17]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-[17px] font-black leading-snug text-[#1c1a17] sm:border-r sm:border-[#1c1a17]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6b645a]">03</span>独学だと、合っているのか分からない</p><p class="pb-4 pl-8 text-sm leading-relaxed text-[#4a453e] sm:py-4 sm:pl-5">仕訳入力164問・穴埋め・分類問題。その場で答え合わせができ、間違えた理由まで解説する。</p></div>
+<div class="grid border-b border-[#1c1a17]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-[17px] font-black leading-snug text-[#1c1a17] sm:border-r sm:border-[#1c1a17]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6b645a]">04</span>本番で時間が足りなくなりそう</p><p class="pb-4 pl-8 text-sm leading-relaxed text-[#4a453e] sm:py-4 sm:pl-5">本試験と同じ形式の模擬試験を、60分タイマーと自動採点で。大問ごとの得点と、復習すべき章が分かる。</p></div>
+<div class="grid border-b border-[#1c1a17]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-[17px] font-black leading-snug text-[#1c1a17] sm:border-r sm:border-[#1c1a17]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6b645a]">05</span>簿記を、仕事や就活に生かしたい</p><p class="pb-4 pl-8 text-sm leading-relaxed text-[#4a453e] sm:py-4 sm:pl-5">倒産・粉飾・横領など実際の事件を、学んだ仕訳で読み解く。経営者や銀行員の立場で判断する発展問題つき。</p></div>
+<div class="grid border-b border-[#1c1a17]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-[17px] font-black leading-snug text-[#1c1a17] sm:border-r sm:border-[#1c1a17]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6b645a]">06</span>2027年4月の改定が気になる</p><p class="pb-4 pl-8 text-sm leading-relaxed text-[#4a453e] sm:py-4 sm:pl-5">いまの出題範囲を完全にカバーしたうえで、改定で加わる論点・外れる論点に印をつけている。</p></div>
 </div>
 </section>
 
-<section class="my-10">
-<p class="text-xs font-black tracking-[0.3em] text-violet-600">WHY THIS BOOK</p>
-<h2 class="mt-1 font-serif text-2xl font-black leading-snug text-gray-900 sm:text-3xl">このテキストの3つの強み</h2>
-<div class="mt-5 grid gap-3 sm:grid-cols-3">
-<div class="relative overflow-hidden rounded-2xl bg-gray-900 p-5 text-white shadow-lg"><p class="bg-gradient-to-r from-amber-300 to-pink-400 bg-clip-text font-serif text-5xl font-black text-transparent">01</p><p class="mt-2 text-lg font-black leading-snug">物語で、ルールの「なぜ」がわかる</p><p class="mt-1.5 text-sm leading-relaxed text-gray-300">父の定食屋の黒字倒産から始まる、新人・大川ひよりの1年。21の事件の答えが、そのまま3級の論点になっている。</p></div>
-<div class="relative overflow-hidden rounded-2xl bg-gray-900 p-5 text-white shadow-lg"><p class="bg-gradient-to-r from-sky-300 to-violet-400 bg-clip-text font-serif text-5xl font-black text-transparent">02</p><p class="mt-2 text-lg font-black leading-snug">手を動かして、その場で身につく</p><p class="mt-1.5 text-sm leading-relaxed text-gray-300">すべての例題と確認問題に入力欄。勘定科目を選び、金額を入れて答え合わせ。ネット試験と同じ感覚で練習できる。</p></div>
-<div class="relative overflow-hidden rounded-2xl bg-gray-900 p-5 text-white shadow-lg"><p class="bg-gradient-to-r from-emerald-300 to-cyan-400 bg-clip-text font-serif text-5xl font-black text-transparent">03</p><p class="mt-2 text-lg font-black leading-snug">合格のその先まで、つながる</p><p class="mt-1.5 text-sm leading-relaxed text-gray-300">実際の事件を仕訳で読み解き、資金繰りや与信の判断にも挑戦する。2級・1級や実務で使う考え方が、自然に身につく。</p></div>
+<section class="my-14">
+<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#b8322a]"><span>WHY THIS BOOK</span><span class="h-px flex-1 bg-[#b8322a]/30"></span></p>
+<h2 class="mt-3 font-serif text-[1.7rem] font-black leading-snug text-[#1c1a17] sm:text-3xl">このテキストの3つの強み</h2>
+<div class="mt-6 grid gap-8 sm:grid-cols-3 sm:gap-6">
+<div class="border-t-2 border-[#1c1a17] pt-4"><p class="font-serif text-5xl font-black leading-none text-[#b8322a]">一</p><p class="mt-3 font-serif text-lg font-black leading-snug text-[#1c1a17]">物語で、ルールの「なぜ」がわかる</p><p class="mt-2 text-sm leading-relaxed text-[#4a453e]">父の定食屋の黒字倒産から始まる、新人・大川ひよりの1年。21の事件の答えが、そのまま3級の論点になっている。</p></div>
+<div class="border-t-2 border-[#1c1a17] pt-4"><p class="font-serif text-5xl font-black leading-none text-[#b8322a]">二</p><p class="mt-3 font-serif text-lg font-black leading-snug text-[#1c1a17]">手を動かして、その場で身につく</p><p class="mt-2 text-sm leading-relaxed text-[#4a453e]">すべての例題と確認問題に入力欄。勘定科目を選び、金額を入れて答え合わせ。ネット試験と同じ感覚で練習できる。</p></div>
+<div class="border-t-2 border-[#1c1a17] pt-4"><p class="font-serif text-5xl font-black leading-none text-[#b8322a]">三</p><p class="mt-3 font-serif text-lg font-black leading-snug text-[#1c1a17]">合格のその先まで、つながる</p><p class="mt-2 text-sm leading-relaxed text-[#4a453e]">実際の事件を仕訳で読み解き、資金繰りや与信の判断にも挑戦する。2級・1級や実務で使う考え方が、自然に身につく。</p></div>
 </div>
 </section>
 
@@ -80,7 +81,7 @@
 
 各章は、色分けしたボックスを組み合わせて作られている。色と役割を覚えておくと、復習のときに目的の情報へすぐたどり着ける。押すと、見本つきの説明が開く。
 
-<details class="group my-4 rounded-lg border border-gray-200 bg-white shadow-sm"><summary class="flex cursor-pointer select-none items-center justify-between gap-3 px-5 py-3 font-bold text-gray-800 hover:bg-gray-50"><span>7種類のボックスの見本を開く</span><span aria-hidden="true" class="flex-none text-xs text-gray-400 transition-transform group-open:rotate-180">▼</span></summary><div class="border-t border-gray-100 px-4 pb-2 sm:px-5">
+<details class="group my-3 border border-[#1c1a17]/25 bg-[#fbf8f1]"><summary class="flex cursor-pointer select-none items-center justify-between gap-3 px-5 py-4 font-serif font-black text-[#1c1a17] hover:bg-[#f3eee3]"><span>7種類のボックスの見本を開く</span><span aria-hidden="true" class="flex h-7 w-7 flex-none items-center justify-center border border-[#1c1a17]/30 font-serif text-base leading-none transition group-open:rotate-45">＋</span></summary><div class="border-t border-[#1c1a17]/15 bg-white px-4 pb-2 sm:px-5">
 
 ::mystery 各章は「問い」から始まる
 身近な会社で起こる、直感に反する出来事。その理由を考えることが、各章の入り口になる。答えは、章の後半の「答え合わせ」で明かされる。
@@ -122,7 +123,7 @@
 
 </div></details>
 
-<details class="group my-4 rounded-lg border border-gray-200 bg-white shadow-sm"><summary class="flex cursor-pointer select-none items-center justify-between gap-3 px-5 py-3 font-bold text-gray-800 hover:bg-gray-50"><span>演習（TRY）と、本文の仕掛けの説明を開く</span><span aria-hidden="true" class="flex-none text-xs text-gray-400 transition-transform group-open:rotate-180">▼</span></summary><div class="border-t border-gray-100 px-4 pb-2 sm:px-5">
+<details class="group my-3 border border-[#1c1a17]/25 bg-[#fbf8f1]"><summary class="flex cursor-pointer select-none items-center justify-between gap-3 px-5 py-4 font-serif font-black text-[#1c1a17] hover:bg-[#f3eee3]"><span>演習（TRY）と、本文の仕掛けの説明を開く</span><span aria-hidden="true" class="flex h-7 w-7 flex-none items-center justify-center border border-[#1c1a17]/30 font-serif text-base leading-none transition group-open:rotate-45">＋</span></summary><div class="border-t border-[#1c1a17]/15 bg-white px-4 pb-2 sm:px-5">
 
 ::point 例題と確認問題は「TRY」で手を動かして解ける
 - **仕訳**：勘定科目をドラッグで記入欄へ入れ（またはタップしてから記入欄をタップ）、金額を入力して「答え合わせ」する。
