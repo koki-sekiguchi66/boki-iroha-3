@@ -3,25 +3,25 @@
 <div id="guide" class="scroll-mt-20"></div>
 
 <section class="my-12">
-<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#b8322a]"><span>FOR READERS</span><span class="h-px flex-1 bg-[#b8322a]/30"></span></p>
-<h2 class="mt-3 font-serif text-[1.7rem] font-black leading-snug text-[#1c1a17] sm:text-3xl">こんな人のための、簿記3級テキスト</h2>
-<div class="mt-6 border-t-2 border-[#1c1a17]">
-<div class="hidden grid-cols-2 border-b border-[#1c1a17]/30 text-[11px] font-bold tracking-[0.2em] text-[#6b645a] sm:grid"><p class="py-2 sm:border-r sm:border-[#1c1a17]/15">借方 ― こんな悩み</p><p class="py-2 pl-5">貸方 ― このテキストの答え</p></div>
-<div class="grid border-b border-[#1c1a17]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-[17px] font-black leading-snug text-[#1c1a17] sm:border-r sm:border-[#1c1a17]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6b645a]">01</span>テキストを開くと、3ページで眠くなる</p><p class="pb-4 pl-8 text-sm leading-relaxed text-[#4a453e] sm:py-4 sm:pl-5">1章ごとに「黒字なのに、なぜ潰れた？」のような事件が起きる。続きが気になるから、気づけば読み進めている。</p></div>
-<div class="grid border-b border-[#1c1a17]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-[17px] font-black leading-snug text-[#1c1a17] sm:border-r sm:border-[#1c1a17]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6b645a]">02</span>仕訳を丸暗記しては、すぐ忘れる</p><p class="pb-4 pl-8 text-sm leading-relaxed text-[#4a453e] sm:py-4 sm:pl-5">「なぜ借方なのか」を、事件の謎解きの中で理解する。理由で覚えた仕訳は、本番でも崩れない。</p></div>
-<div class="grid border-b border-[#1c1a17]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-[17px] font-black leading-snug text-[#1c1a17] sm:border-r sm:border-[#1c1a17]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6b645a]">03</span>未経験から、経理・事務の仕事に転職したい</p><p class="pb-4 pl-8 text-sm leading-relaxed text-[#4a453e] sm:py-4 sm:pl-5">月次の試算表、決算整理、資金繰り表、請求書からの仕訳。経理の現場の1年をたどりながら学ぶので、面接で「簿記を仕事でどう使うか」を自分の言葉で話せる。</p></div>
-<div class="grid border-b border-[#1c1a17]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-[17px] font-black leading-snug text-[#1c1a17] sm:border-r sm:border-[#1c1a17]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6b645a]">04</span>営業や販売の仕事で、数字に強くなりたい</p><p class="pb-4 pl-8 text-sm leading-relaxed text-[#4a453e] sm:py-4 sm:pl-5">取引先の決算書のどこを見れば危ないかが分かる。値上げ、与信、在庫の判断を、経営者や銀行員の立場で考える発展問題つき。</p></div>
-<div class="grid border-b border-[#1c1a17]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-[17px] font-black leading-snug text-[#1c1a17] sm:border-r sm:border-[#1c1a17]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6b645a]">05</span>就活で、資格を「使える」と言えるようにしたい</p><p class="pb-4 pl-8 text-sm leading-relaxed text-[#4a453e] sm:py-4 sm:pl-5">倒産・粉飾・横領など実際の事件を、学んだ仕訳で読み解く。資格の名前だけでなく、数字で会社を語れる力が身につく。</p></div>
+<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#C8462E]"><span>FOR READERS</span><span class="h-px flex-1 bg-[#C8462E]/30"></span></p>
+<h2 class="mt-3 font-serif text-2xl font-black leading-snug text-[#1B2430] sm:text-[2rem]">こんな人のための、簿記3級テキスト</h2>
+<div class="mt-6 border-t border-[#1B2430]">
+<div class="hidden grid-cols-2 border-b border-[#1B2430]/30 text-[11px] font-bold tracking-[0.2em] text-[#6A707A] sm:grid"><p class="py-2 sm:border-r sm:border-[#1B2430]/15">借方 ― こんな悩み</p><p class="py-2 pl-5">貸方 ― このテキストの答え</p></div>
+<div class="grid border-b border-[#1B2430]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug sm:text-[17px] text-[#1B2430] sm:border-r sm:border-[#1B2430]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A]">01</span>テキストを開くと、3ページで眠くなる</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-4 sm:pl-5 sm:text-sm">1章ごとに「黒字なのに、なぜ潰れた？」のような事件が起きる。続きが気になるから、気づけば読み進めている。</p></div>
+<div class="grid border-b border-[#1B2430]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug sm:text-[17px] text-[#1B2430] sm:border-r sm:border-[#1B2430]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A]">02</span>仕訳を丸暗記しては、すぐ忘れる</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-4 sm:pl-5 sm:text-sm">「なぜ借方なのか」を、事件の謎解きの中で理解する。理由で覚えた仕訳は、本番でも崩れない。</p></div>
+<div class="grid border-b border-[#1B2430]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug sm:text-[17px] text-[#1B2430] sm:border-r sm:border-[#1B2430]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A]">03</span>未経験から、経理・事務の仕事に転職したい</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-4 sm:pl-5 sm:text-sm">月次の試算表、決算整理、資金繰り表、請求書からの仕訳。経理の現場の1年をたどりながら学ぶので、面接で「簿記を仕事でどう使うか」を自分の言葉で話せる。</p></div>
+<div class="grid border-b border-[#1B2430]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug sm:text-[17px] text-[#1B2430] sm:border-r sm:border-[#1B2430]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A]">04</span>営業や販売の仕事で、数字に強くなりたい</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-4 sm:pl-5 sm:text-sm">取引先の決算書のどこを見れば危ないかが分かる。値上げ、与信、在庫の判断を、経営者や銀行員の立場で考える発展問題つき。</p></div>
+<div class="grid border-b border-[#1B2430]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug sm:text-[17px] text-[#1B2430] sm:border-r sm:border-[#1B2430]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A]">05</span>就活で、資格を「使える」と言えるようにしたい</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-4 sm:pl-5 sm:text-sm">倒産・粉飾・横領など実際の事件を、学んだ仕訳で読み解く。資格の名前だけでなく、数字で会社を語れる力が身につく。</p></div>
 </div>
 </section>
 
 <section class="my-14">
-<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#b8322a]"><span>WHY THIS BOOK</span><span class="h-px flex-1 bg-[#b8322a]/30"></span></p>
-<h2 class="mt-3 font-serif text-[1.7rem] font-black leading-snug text-[#1c1a17] sm:text-3xl">このテキストの3つの強み</h2>
-<div class="mt-6 grid gap-8 sm:grid-cols-3 sm:gap-6">
-<div class="border-t-2 border-[#1c1a17] pt-4"><p class="font-serif text-5xl font-black leading-none text-[#b8322a]">一</p><p class="mt-3 font-serif text-lg font-black leading-snug text-[#1c1a17]">物語で、ルールの「なぜ」がわかる</p><p class="mt-2 text-sm leading-relaxed text-[#4a453e]">父の定食屋の黒字倒産から始まる、新人・大川ひよりの1年。21の事件の答えが、そのまま3級の論点になっている。</p></div>
-<div class="border-t-2 border-[#1c1a17] pt-4"><p class="font-serif text-5xl font-black leading-none text-[#b8322a]">二</p><p class="mt-3 font-serif text-lg font-black leading-snug text-[#1c1a17]">手を動かして、その場で身につく</p><p class="mt-2 text-sm leading-relaxed text-[#4a453e]">すべての例題と確認問題に入力欄。勘定科目を選び、金額を入れて答え合わせ。ネット試験と同じ感覚で練習できる。</p></div>
-<div class="border-t-2 border-[#1c1a17] pt-4"><p class="font-serif text-5xl font-black leading-none text-[#b8322a]">三</p><p class="mt-3 font-serif text-lg font-black leading-snug text-[#1c1a17]">合格のその先まで、つながる</p><p class="mt-2 text-sm leading-relaxed text-[#4a453e]">実際の事件を仕訳で読み解き、資金繰りや与信の判断にも挑戦する。経理への転職や2級・1級、日々の仕事で使う考え方が、自然に身につく。</p></div>
+<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#C8462E]"><span>WHY THIS BOOK</span><span class="h-px flex-1 bg-[#C8462E]/30"></span></p>
+<h2 class="mt-3 font-serif text-2xl font-black leading-snug text-[#1B2430] sm:text-[2rem]">このテキストの3つの強み</h2>
+<div class="mt-6 grid gap-7 sm:grid-cols-3 sm:gap-8">
+<div class="border-t border-[#1B2430]/25 pt-5"><span aria-hidden="true" class="block h-0.5 w-8 bg-[#C8462E]"></span><p class="mt-4 font-serif text-lg font-black leading-snug text-[#1B2430]">物語で、ルールの「なぜ」がわかる</p><p class="mt-2 text-sm leading-relaxed text-[#3D4551]">父の定食屋の黒字倒産から始まる、新人・大川ひよりの1年。21の事件の答えが、そのまま3級の論点になっている。</p></div>
+<div class="border-t border-[#1B2430]/25 pt-5"><span aria-hidden="true" class="block h-0.5 w-8 bg-[#C8462E]"></span><p class="mt-4 font-serif text-lg font-black leading-snug text-[#1B2430]">手を動かして、その場で身につく</p><p class="mt-2 text-sm leading-relaxed text-[#3D4551]">すべての例題と確認問題に入力欄。勘定科目を選び、金額を入れて答え合わせ。ネット試験と同じ感覚で練習できる。</p></div>
+<div class="border-t border-[#1B2430]/25 pt-5"><span aria-hidden="true" class="block h-0.5 w-8 bg-[#C8462E]"></span><p class="mt-4 font-serif text-lg font-black leading-snug text-[#1B2430]">合格のその先まで、つながる</p><p class="mt-2 text-sm leading-relaxed text-[#3D4551]">実際の事件を仕訳で読み解き、資金繰りや与信の判断にも挑戦する。経理への転職や2級・1級、日々の仕事で使う考え方が、自然に身につく。</p></div>
 </div>
 </section>
 
@@ -81,7 +81,7 @@
 
 各章は、色分けしたボックスを組み合わせて作られている。色と役割を覚えておくと、復習のときに目的の情報へすぐたどり着ける。押すと、見本つきの説明が開く。
 
-<details class="group my-3 border border-[#1c1a17]/25 bg-[#fbf8f1]"><summary class="flex cursor-pointer select-none items-center justify-between gap-3 px-5 py-4 font-serif font-black text-[#1c1a17] hover:bg-[#f3eee3]"><span>7種類のボックスの見本を開く</span><span aria-hidden="true" class="flex h-7 w-7 flex-none items-center justify-center border border-[#1c1a17]/30 font-serif text-base leading-none transition group-open:rotate-45">＋</span></summary><div class="border-t border-[#1c1a17]/15 bg-white px-4 pb-2 sm:px-5">
+<details class="group my-3 border border-[#1B2430]/25 bg-white/70"><summary class="flex cursor-pointer select-none items-center justify-between gap-3 px-5 py-4 font-serif font-black text-[#1B2430] hover:bg-[#F6F3EC]"><span>7種類のボックスの見本を開く</span><span aria-hidden="true" class="flex h-7 w-7 flex-none items-center justify-center border border-[#1B2430]/30 font-serif text-base leading-none transition group-open:rotate-45">＋</span></summary><div class="border-t border-[#1B2430]/15 bg-white px-4 pb-2 sm:px-5">
 
 ::mystery 各章は「問い」から始まる
 身近な会社で起こる、直感に反する出来事。その理由を考えることが、各章の入り口になる。答えは、章の後半の「答え合わせ」で明かされる。
@@ -123,7 +123,7 @@
 
 </div></details>
 
-<details class="group my-3 border border-[#1c1a17]/25 bg-[#fbf8f1]"><summary class="flex cursor-pointer select-none items-center justify-between gap-3 px-5 py-4 font-serif font-black text-[#1c1a17] hover:bg-[#f3eee3]"><span>演習（TRY）と、本文の仕掛けの説明を開く</span><span aria-hidden="true" class="flex h-7 w-7 flex-none items-center justify-center border border-[#1c1a17]/30 font-serif text-base leading-none transition group-open:rotate-45">＋</span></summary><div class="border-t border-[#1c1a17]/15 bg-white px-4 pb-2 sm:px-5">
+<details class="group my-3 border border-[#1B2430]/25 bg-white/70"><summary class="flex cursor-pointer select-none items-center justify-between gap-3 px-5 py-4 font-serif font-black text-[#1B2430] hover:bg-[#F6F3EC]"><span>演習（TRY）と、本文の仕掛けの説明を開く</span><span aria-hidden="true" class="flex h-7 w-7 flex-none items-center justify-center border border-[#1B2430]/30 font-serif text-base leading-none transition group-open:rotate-45">＋</span></summary><div class="border-t border-[#1B2430]/15 bg-white px-4 pb-2 sm:px-5">
 
 ::point 例題と確認問題は「TRY」で手を動かして解ける
 - **仕訳**：勘定科目をドラッグで記入欄へ入れ（またはタップしてから記入欄をタップ）、金額を入力して「答え合わせ」する。

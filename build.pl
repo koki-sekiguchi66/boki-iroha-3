@@ -377,7 +377,7 @@ sub r_h {
         $CTX{tseen} = {};     # 用語のリンクは見出しごとに最初の1回だけ
         my $n = sprintf('%02d', $SECN);
         return qq{<h2 id="$id" class="mb-6 mt-16 flex scroll-mt-20 items-baseline gap-3 font-serif text-[1.4rem] font-black leading-snug $c sm:text-[1.65rem]">}
-             . qq{<span class="flex-none font-sans text-sm font-black tracking-widest text-amber-600">$n</span><span>} . inl($t) . '</span></h2>';
+             . qq{<span class="flex-none font-sans text-sm font-black tracking-widest text-[#C8462E]">$n</span><span>} . inl($t) . '</span></h2>';
     }
     if ($lv == 3) {
         my $b = $DARK ? 'border-amber-400' : 'border-gray-900';
@@ -1545,32 +1545,30 @@ sub r_toc {
             push @groups, [$p, []] if !@groups || $groups[-1][0] ne $p;
             push @{ $groups[-1][1] }, $id;
         }
-        my $gi = 0;
-        $html .= '<div class="border-t-2 border-[#1c1a17]">';
+        $html .= '<div class="border-t border-[#1B2430]">';
         for my $g (@groups) {
             my ($p, $ids) = @$g;
             my ($n1, $n2) = map { $META{$_}{num} // '' } $ids->[0], $ids->[-1];
             my $range = $n1 eq $n2 ? $n1 : "$n1〜$n2";
-            # 雑誌の目次のように：左に朱の大きな番号、中央に部の名前、下に章の範囲
-            my ($mark, $badge, $name, $sub);
-            if ($p =~ /^第(\S+)部\s+(.+)$/) { ($mark, $badge, $name, $sub) = ($1, "第$1部", $2, "$range（" . scalar(@$ids) . '章）'); }
-            elsif (@$ids == 1)            { ($mark, $badge, $name, $sub) = (substr($n1, 0, 1), $p, $META{ $ids->[0] }{subtitle} // $range, $range); }
-            else                          { ($mark, $badge, $name, $sub) = (substr($n1, 0, 1), $p, $range, scalar(@$ids) . '本'); }
-            $html .= '<details class="group border-b border-[#1c1a17]/20">'
-                   . '<summary class="flex cursor-pointer select-none items-center gap-4 py-4 pr-1 transition hover:bg-[#f3eee3]/60 sm:gap-5">'
-                   . '<span class="w-10 flex-none text-center font-serif text-4xl font-black leading-none text-[#b8322a] sm:w-12 sm:text-5xl">' . esc($mark) . '</span>'
-                   . '<span class="min-w-0 flex-1"><span class="block text-[11px] font-bold tracking-[0.25em] text-[#6b645a]">' . esc($badge) . '</span>'
-                   . '<span class="mt-0.5 block font-serif text-xl font-black leading-snug text-[#1c1a17] sm:text-2xl">' . esc($name) . '</span>'
-                   . '<span class="mt-0.5 block text-xs font-bold text-[#6b645a]">' . esc($sub) . '</span></span>'
-                   . '<span aria-hidden="true" class="flex h-8 w-8 flex-none items-center justify-center border border-[#1c1a17]/30 font-serif text-lg leading-none text-[#1c1a17] transition group-open:rotate-45">＋</span></summary>'
-                   . '<ol class="mb-4 ml-14 border-l border-[#b8322a]/40 sm:ml-[4.25rem]">';
+            # 部ごとの行：上に朱の小さなラベル（第1部など）、明朝の部名、下に章の範囲
+            my ($badge, $name, $sub);
+            if ($p =~ /^(第\S+部)\s+(.+)$/) { ($badge, $name, $sub) = ($1, $2, "$range（" . scalar(@$ids) . '章）'); }
+            elsif (@$ids == 1)            { ($badge, $name, $sub) = ($p, $META{ $ids->[0] }{subtitle} // $range, $range); }
+            else                          { ($badge, $name, $sub) = ($p, $range, scalar(@$ids) . '本'); }
+            $html .= '<details class="group border-b border-[#1B2430]/15">'
+                   . '<summary class="flex cursor-pointer select-none items-center gap-4 py-4 transition hover:bg-white/60 sm:py-5 sm:pl-2">'
+                   . '<span class="min-w-0 flex-1"><span class="block text-[10px] font-bold tracking-[0.25em] text-[#C8462E] sm:text-[11px]">' . esc($badge) . '</span>'
+                   . '<span class="mt-1 block font-serif text-lg font-black leading-snug text-[#1B2430] sm:text-[1.35rem]">' . esc($name) . '</span>'
+                   . '<span class="mt-1 block text-xs font-bold text-[#6A707A]">' . esc($sub) . '</span></span>'
+                   . '<span aria-hidden="true" class="flex h-8 w-8 flex-none items-center justify-center border border-[#1B2430]/25 text-base leading-none text-[#1B2430] transition group-open:rotate-45 group-open:border-[#C8462E] group-open:text-[#C8462E]">＋</span></summary>'
+                   . '<ol class="mb-5 border-l-2 border-[#C8462E]/50 bg-white/70">';
             for my $id (@$ids) {
                 my $m    = $META{$id};
                 my $href = href_for($id, $CTX{mode} // 'page');
-                $html .= qq{<li><a href="$href" class="group/item flex items-baseline gap-3 py-2.5 pl-4 pr-1 transition hover:bg-[#f3eee3]">}
-                       . '<span class="w-14 flex-none text-xs font-bold text-[#6b645a]">' . esc($m->{num}) . '</span>'
-                       . '<span class="min-w-0 flex-1 font-bold leading-snug text-[#1c1a17] [word-break:auto-phrase] group-hover/item:text-[#b8322a]">' . esc($m->{subtitle}) . '</span>'
-                       . '<span aria-hidden="true" class="flex-none text-[#1c1a17]/30 transition group-hover/item:translate-x-0.5 group-hover/item:text-[#b8322a]">→</span></a></li>';
+                $html .= qq{<li class="border-b border-[#1B2430]/8 last:border-b-0"><a href="$href" class="group/item flex items-baseline gap-3 px-4 py-3 transition hover:bg-[#F6F3EC]">}
+                       . '<span class="w-14 flex-none text-xs font-bold text-[#6A707A]">' . esc($m->{num}) . '</span>'
+                       . '<span class="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#1B2430] [word-break:auto-phrase] group-hover/item:text-[#C8462E]">' . esc($m->{subtitle}) . '</span>'
+                       . '<span aria-hidden="true" class="flex-none text-[#1B2430]/30 transition group-hover/item:translate-x-0.5 group-hover/item:text-[#C8462E]">→</span></a></li>';
             }
             $html .= '</ol></details>';
         }
@@ -1690,9 +1688,9 @@ sub site_header {
     my ($cur, $mode) = @_;
     my $label = ($cur && $META{$cur}) ? esc($META{$cur}{num}) : '';
     my $home  = $mode eq 'all' ? '#top' : 'index.html';
-    return qq{<header class="no-print sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur">}
+    return qq{<header class="no-print sticky top-0 z-40 border-b border-[#1B2430]/10 bg-[#F6F3EC]/90 backdrop-blur">}
          . qq{<div class="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4 sm:px-6">}
-         . qq{<a href="$home" class="flex min-w-0 items-center gap-2"><span class="flex h-7 w-7 flex-none items-center justify-center rounded bg-gray-900 font-serif text-sm font-black text-amber-400">$MARK</span><span class="truncate text-sm font-black text-gray-900 sm:text-base">$BOOK</span></a>}
+         . qq{<a href="$home" class="flex min-w-0 items-center gap-2"><span class="flex h-7 w-7 flex-none items-center justify-center bg-[#1B2430] font-serif text-sm font-black text-[#F6F3EC]">$MARK</span><span class="truncate text-sm font-black text-gray-900 sm:text-base">$BOOK</span></a>}
          . qq{<div class="flex flex-none items-center gap-2">}
          . ($label ? qq{<span class="hidden text-xs font-bold text-gray-400 sm:inline">$label</span>} : '')
          . qq{<details data-dropdown class="relative"><summary class="flex cursor-pointer select-none items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-bold text-gray-700 hover:bg-gray-50">目次<span class="text-[10px] text-gray-400">▼</span></summary>}
@@ -1744,8 +1742,10 @@ sub script_html {    # 進捗バー・目次・「続きから」＋ 演習な�
       cont.href = last.id + '.html';
       cont.querySelector('[data-label]').textContent = last.label;
       cont.classList.remove('hidden');
+      cont.classList.add('flex');
+      // 続きがあるときは「続きから読む」を主役にし、最初から読むボタンは濃い文字の枠ボタンにする（明るい背景でも読める色）
       const start = document.getElementById('cta-start');
-      if (start) start.className = 'rounded-md border border-white/30 px-5 py-3 font-bold text-white transition hover:bg-white/10';
+      if (start) start.className = 'group inline-flex w-full items-center justify-between gap-6 border border-[#1B2430]/40 bg-white/70 px-6 py-4 font-bold text-[#1B2430] transition hover:border-[#C8462E] hover:text-[#C8462E] sm:w-auto';
     }
   } catch (e) {}
 })();
@@ -1758,8 +1758,8 @@ sub page_html {
     my (%o) = @_;
     my $rec = $o{record} ? ' data-page="' . esc($o{cur}) . '" data-label="' . esc($o{record}) . '"' : '';
     return head_html($o{title}, $o{desc}, $o{path}, $o{noindex})
-         . qq{<body id="top"$rec class="bg-stone-50 font-sans text-[16px] text-gray-800 antialiased sm:text-[17px]">\n}
-         . qq{<div id="progress" class="no-print fixed left-0 top-0 z-50 h-1 w-0 bg-amber-500"></div>\n}
+         . qq{<body id="top"$rec class="bg-[#F6F3EC] font-sans text-[16px] text-gray-800 antialiased sm:text-[17px]">\n}
+         . qq{<div id="progress" class="no-print fixed left-0 top-0 z-50 h-1 w-0 bg-[#C8462E]"></div>\n}
          . site_header($o{cur}, $o{mode})
          . ($o{top} // '')
          . qq{<main class="mx-auto max-w-3xl px-4 pb-10 sm:px-6">\n$o{main}\n</main>\n}
@@ -1902,25 +1902,26 @@ if (-e "$SRC/guide.txt") {
 sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに絞る
     my $mode  = shift;
     my $start = $mode eq 'all' ? "#$IDS[0]" : "$IDS[0].html";
-    # 紙と墨と朱の「帳簿」をモチーフにした表紙（グラデーションや角丸は使わない）
-    my $cont  = $mode eq 'all' ? '' : qq{<a id="cta-continue" href="$start" class="hidden border border-[#1c1a17] bg-[#fbf8f1] px-6 py-3.5 font-bold text-[#1c1a17] transition hover:bg-white">続きから読む →<span data-label class="mt-0.5 block text-xs font-normal text-[#6b645a]"></span></a>};
+    # 紙・墨・朱の配色で、帳簿の罫線をモチーフにした表紙（グラデーションや角丸は使わない）
+    # 配色：紙 #F6F3EC／墨 #1B2430／本文 #3D4551／補足 #6A707A／朱 #C8462E／罫線の紺 #2F4A6D
+    my $cont  = $mode eq 'all' ? '' : qq{<a id="cta-continue" href="$start" class="hidden w-full items-center justify-between gap-3 bg-[#1B2430] px-6 py-4 font-bold text-[#F6F3EC] transition hover:bg-[#C8462E] sm:inline-flex sm:w-auto">続きから読む<span data-label class="text-xs font-normal text-[#F6F3EC]/70"></span><span aria-hidden="true">→</span></a>};
     # 表紙の特徴（book.txt の「@chips A | B | …」で変えられる）。帳簿の1行のように罫線で区切って並べる
     my @chips = split /\s*\|\s*/, ($CFG{chips} // '');
-    my $chips = join '', map { qq{<li class="border-b border-r border-[#1c1a17]/20 px-3 py-2.5 text-[13px] font-bold leading-snug text-[#1c1a17]"><span class="mr-1.5 font-serif text-[#b8322a]">✓</span>} . esc($_) . '</li>' } @chips;
-    my $hook  = $CFG{hook} ? qq{<p class="mt-8 max-w-xl border-l-2 border-[#b8322a] pl-4 font-serif text-lg leading-relaxed text-[#b8322a] sm:text-xl">} . esc($CFG{hook}) . '</p>' : '';
-    my $ruled = 'background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 35px,rgba(40,70,120,.10) 35px,rgba(40,70,120,.10) 36px)';
-    return qq{<section class="relative overflow-hidden border-b border-[#1c1a17]/15 bg-[#f3eee3] text-[#1c1a17]" style="$ruled">}
-         . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-y-0 left-3 flex gap-[3px] sm:left-8"><span class="w-px bg-[#b8322a]/45"></span><span class="w-px bg-[#b8322a]/45"></span></div>}
-         . qq{<div aria-hidden="true" class="pointer-events-none absolute right-5 top-16 hidden h-24 w-24 rotate-[-12deg] items-center justify-center rounded-full border-[3px] border-[#b8322a]/80 font-serif text-[15px] font-black leading-tight text-[#b8322a]/85 sm:flex"><span class="text-center">全範囲<br>収録</span></div>}
-         . qq{<div class="relative mx-auto max-w-3xl px-6 pb-14 pt-12 sm:px-8 sm:pb-20 sm:pt-16">}
-         . qq{<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#6b645a]"><span>CASE BOOK</span><span class="h-px flex-1 bg-[#1c1a17]/25"></span><span>日商簿記 3級</span></p>}
+    my $chips = join '', map { qq{<li class="flex items-center gap-2 border-b border-r border-[#1B2430]/12 px-3 py-2.5 text-[12px] font-bold leading-snug text-[#1B2430] sm:px-4 sm:py-3 sm:text-sm"><span aria-hidden="true" class="h-1.5 w-1.5 flex-none bg-[#C8462E]"></span>} . esc($_) . '</li>' } @chips;
+    my $hook  = $CFG{hook} ? qq{<p class="mt-7 max-w-xl border-l-2 border-[#C8462E] pl-4 font-serif text-base leading-relaxed text-[#C8462E] sm:mt-9 sm:text-xl">} . esc($CFG{hook}) . '</p>' : '';
+    my $ruled = 'background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 39px,rgba(47,74,109,.09) 39px,rgba(47,74,109,.09) 40px)';
+    return qq{<section class="relative overflow-hidden border-b border-[#1B2430]/10 bg-[#F6F3EC] text-[#1B2430]" style="$ruled">}
+         . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-y-0 left-2 flex gap-[3px] sm:left-8 lg:left-[calc(50%-27rem)]"><span class="w-px bg-[#C8462E]/40"></span><span class="w-px bg-[#C8462E]/40"></span></div>}
+         . qq{<div aria-hidden="true" class="pointer-events-none absolute right-6 top-14 hidden h-24 w-24 rotate-[-10deg] items-center justify-center rounded-full border-2 border-[#C8462E]/70 font-serif text-sm font-black leading-tight text-[#C8462E]/80 md:flex lg:right-[calc(50%-27rem)]"><span class="text-center">全範囲<br>収録</span></div>}
+         . qq{<div class="relative mx-auto max-w-3xl px-6 pb-12 pt-10 sm:px-8 sm:pb-20 sm:pt-16">}
+         . qq{<p class="flex items-center gap-3 text-[10px] font-bold tracking-[0.35em] text-[#6A707A] sm:text-[11px]"><span>CASE BOOK</span><span class="h-px flex-1 bg-[#1B2430]/20"></span><span>日商簿記 3級</span></p>}
          . $hook
-         . qq{<h1 class="mt-6 font-serif text-[2.9rem] font-black leading-[1.12] tracking-tight sm:text-7xl">$HERO</h1>}
-         . qq{<p class="mt-5 max-w-xl text-[15px] font-bold leading-relaxed text-[#4a453e] text-balance [word-break:auto-phrase] sm:text-base">$BOOK_SUB</p>}
-         . ($chips ? qq{<ul class="mt-8 grid grid-cols-2 border-l border-t border-[#1c1a17]/20 bg-[#fbf8f1]/70 sm:grid-cols-3">$chips</ul>} : '')
-         . qq{<div class="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">$cont}
-         . qq{<a id="cta-start" href="$start" class="group inline-flex items-center gap-3 bg-[#1c1a17] px-7 py-4 font-bold tracking-wide text-[#f3eee3] transition hover:bg-[#b8322a]">$START<span aria-hidden="true" class="transition group-hover:translate-x-1">→</span></a>}
-         . qq{<a href="#guide" class="border-b border-[#1c1a17]/40 pb-0.5 text-sm font-bold text-[#1c1a17] transition hover:border-[#b8322a] hover:text-[#b8322a]">このサイトの使い方</a></div>}
+         . qq{<h1 class="mt-5 font-serif text-[2.6rem] font-black leading-[1.15] tracking-tight sm:mt-6 sm:text-6xl lg:text-7xl">$HERO</h1>}
+         . qq{<p class="mt-4 max-w-xl text-sm font-bold leading-relaxed text-[#3D4551] text-balance [word-break:auto-phrase] sm:mt-5 sm:text-base">$BOOK_SUB</p>}
+         . ($chips ? qq{<ul class="mt-7 grid grid-cols-2 border-l border-t border-[#1B2430]/12 bg-white/60 sm:mt-9 sm:grid-cols-3">$chips</ul>} : '')
+         . qq{<div class="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6">$cont}
+         . qq{<a id="cta-start" href="$start" class="group inline-flex w-full items-center justify-between gap-6 bg-[#1B2430] px-6 py-4 font-bold tracking-wide text-[#F6F3EC] transition hover:bg-[#C8462E] sm:w-auto">$START<span aria-hidden="true" class="transition group-hover:translate-x-1">→</span></a>}
+         . qq{<a href="#guide" class="self-start border-b border-[#1B2430]/30 pb-0.5 text-sm font-bold text-[#1B2430] transition hover:border-[#C8462E] hover:text-[#C8462E] sm:self-auto">このサイトの使い方</a></div>}
          . qq{</div></section>\n};
 }
 
