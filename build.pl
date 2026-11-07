@@ -1910,28 +1910,28 @@ sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに�
     # 数字の帯（book.txt の「@stats 21:事件で学ぶ | 164:仕訳入力の問題 | …」で変えられる）。大きな数字と小さな説明の対比で見せる
     my @stats = map { [split /\s*:\s*/, $_, 2] } grep { /:/ } split /\s*\|\s*/, ($CFG{stats} // '');
     my $stats = join '', map { qq{<div class="border-r border-t border-[#1B2430]/15 px-4 py-4 sm:px-5 sm:py-5"><p class="font-serif text-[2rem] font-black leading-none tracking-tight text-[#1B2430] sm:text-[2.6rem]">} . esc($_->[0]) . qq{</p><p class="mt-2 text-[11px] font-bold leading-snug tracking-wide text-[#6A707A] sm:text-xs">} . esc($_->[1]) . '</p></div>' } @stats;
-    my $hook  = $CFG{hook} ? qq{<p class="mt-8 max-w-md border-l-2 border-[#C8462E] pl-4 font-serif text-base leading-relaxed text-[#C8462E] sm:mt-10 sm:text-xl">} . esc($CFG{hook}) . '</p>' : '';
+    my $hook  = $CFG{hook} ? qq{<p class="mt-8 max-w-xl border-l-2 border-[#C8462E] pl-4 font-serif text-base leading-relaxed text-[#C8462E] text-balance [word-break:auto-phrase] sm:mt-10 sm:text-xl">} . esc($CFG{hook}) . '</p>' : '';
     my $quote = $CFG{quote} // '';
     my ($qtext, $qby) = split /\s*\/\/\s*/, $quote, 2;
-    my $side  = $quote ne '' ? qq{<aside aria-label="引用" class="hidden flex-col items-center justify-between gap-10 border-l border-[#1B2430]/15 pl-8 lg:col-span-3 lg:flex">}
+    my $side  = $quote ne '' ? qq{<aside aria-label="引用" class="hidden flex-col items-center justify-between gap-8 border-l border-[#1B2430]/15 pl-6 pt-10 lg:col-span-3 lg:flex">}
               . qq{<p class="font-serif text-[1.35rem] font-bold leading-[2.1] tracking-[0.18em] text-[#1B2430] [writing-mode:vertical-rl]">} . join('<br>', map { esc($_) } split /／/, $qtext) . '</p>'
               . ($qby ? qq{<p class="text-[11px] font-bold tracking-[0.2em] text-[#6A707A] [writing-mode:vertical-rl]">― } . esc($qby) . '</p>' : '')
               . qq{<div aria-hidden="true" class="flex h-20 w-20 rotate-[-10deg] items-center justify-center rounded-full border-2 border-[#C8462E]/75 font-serif text-[13px] font-black leading-tight text-[#C8462E]/85"><span class="text-center">全範囲<br>収録</span></div>}
               . '</aside>' : '';
     my $ruled = 'background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%27160%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.9%27 numOctaves=%272%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 0.11 0 0 0 0 0.14 0 0 0 0 0.19 0 0 0 .07 0%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E"),repeating-linear-gradient(to bottom,transparent 0,transparent 39px,rgba(47,74,109,.08) 39px,rgba(47,74,109,.08) 40px)';
     return qq{<section class="relative overflow-hidden border-b border-[#1B2430]/10 bg-[#F6F3EC] text-[#1B2430]" style='$ruled'>}
-         . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-y-0 left-2 flex gap-[3px] sm:left-8 xl:left-[calc(50%-36rem)]"><span class="w-px bg-[#C8462E]/40"></span><span class="w-px bg-[#C8462E]/40"></span></div>}
-         . qq{<div class="relative mx-auto max-w-3xl px-6 pb-10 pt-10 sm:px-8 sm:pt-16 lg:max-w-5xl lg:pb-14 lg:pt-20">}
+         . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-y-0 left-2 flex gap-[3px] sm:left-8 lg:left-[calc(50%-26.5rem)]"><span class="w-px bg-[#C8462E]/40"></span><span class="w-px bg-[#C8462E]/40"></span></div>}
+         . qq{<div class="relative mx-auto max-w-3xl px-6 pb-10 pt-10 sm:px-8 sm:pt-16 lg:pb-14 lg:pt-20">}
          . qq{<p class="flex items-center gap-3 text-[10px] font-bold tracking-[0.35em] text-[#6A707A] sm:text-[11px]"><span>CASE BOOK</span><span class="h-px flex-1 bg-[#1B2430]/20"></span><span>日商簿記 3級</span></p>}
-         . qq{<div class="lg:grid lg:grid-cols-12 lg:gap-10"><div class="lg:col-span-9">}
+         . qq{<div class="lg:grid lg:grid-cols-12 lg:gap-8"><div class="lg:col-span-9">}
          . $hook
-         . qq{<h1 class="mt-5 font-serif text-[2.75rem] font-black leading-[1.08] tracking-tight sm:mt-6 sm:text-7xl lg:text-[5.5rem]">$HERO</h1>}
+         . qq{<h1 class="mt-5 font-serif text-[2.75rem] font-black leading-[1.08] tracking-tight sm:mt-6 sm:text-7xl lg:text-[5rem]">$HERO</h1>}
          . qq{<p class="mt-5 max-w-xl text-sm font-bold leading-relaxed text-[#3D4551] text-balance [word-break:auto-phrase] sm:mt-7 sm:text-base">$BOOK_SUB</p>}
          . qq{<div class="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-7">$cont}
          . qq{<a id="cta-start" href="$start" class="group inline-flex w-full items-center justify-between gap-8 bg-[#1B2430] px-6 py-4 font-bold tracking-wide text-[#F6F3EC] transition hover:bg-[#C8462E] sm:w-auto">$START<span aria-hidden="true" class="transition group-hover:translate-x-1">→</span></a>}
          . qq{<a href="#guide" class="self-start bg-gradient-to-r from-[#C8462E] to-[#C8462E] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-1 text-sm font-bold text-[#1B2430] transition-[background-size,color] duration-300 hover:bg-[length:100%_1px] hover:text-[#C8462E] sm:self-auto">このサイトの使い方 ↓</a></div>}
          . qq{</div>$side</div>}
-         . ($stats ? qq{<div class="mt-10 grid grid-cols-2 border-l border-[#1B2430]/15 bg-white/50 sm:mt-14 sm:grid-cols-4">$stats</div>} : '')
+         . ($stats ? qq{<div class="mt-10 grid grid-cols-2 border-b border-l border-[#1B2430]/15 bg-white/50 sm:mt-14 sm:grid-cols-4">$stats</div>} : '')
          . qq{</div></section>\n};
 }
 
