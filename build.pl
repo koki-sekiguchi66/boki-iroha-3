@@ -6,6 +6,7 @@
 #  入力:     _src/book.txt   … 章の並び（1行1ID）。「@title 書名」などの行で本の設定を変えられる
 #                              （@title @subtitle @hero @mark @start @key @scope @site。なければ3級の既定値）
 #                              「@site https://…」と書くと、canonical・OGP と sitemap.xml・robots.txt を出力する
+#                              「@hook 一言」「@chips A | B | …」で、表紙のつかみの一言と特徴バッジを出す
 #            _src/index.txt  … 表紙ページの本文
 #            _src/<id>.txt   … 各章の本文（独自マークアップ）
 #  出力:     public/ に index.html / <id>.html / all.html（全章一気読み版）
@@ -1544,15 +1545,35 @@ sub r_toc {
             push @groups, [$p, []] if !@groups || $groups[-1][0] ne $p;
             push @{ $groups[-1][1] }, $id;
         }
+        my $gi = 0;
         for my $g (@groups) {
             my ($p, $ids) = @$g;
             my ($n1, $n2) = map { $META{$_}{num} // '' } $ids->[0], $ids->[-1];
             my $range = $n1 eq $n2 ? $n1 : "$n1〜$n2";
-            $html .= '<details class="group mt-2 overflow-hidden rounded-lg border border-gray-200 bg-white">'
-                   . '<summary class="flex cursor-pointer select-none items-center gap-3 px-4 py-3 hover:bg-gray-50">'
-                   . '<span class="min-w-0 flex-1"><span class="block text-[11px] font-bold tracking-[0.2em] text-gray-400">' . esc($p) . '</span>'
-                   . '<span class="block font-bold text-gray-900">' . esc($range) . '<span class="ml-2 text-xs font-medium text-gray-400">' . scalar(@$ids) . '本</span></span></span>'
-                   . '<span aria-hidden="true" class="flex-none text-xs text-gray-400 transition-transform group-open:rotate-180">▼</span></summary>'
+            # 部ごとに色を変え、部の名前を大きく見せる
+            my @PAL = (
+                ['bg-gray-900',   'text-gray-900',   'border-gray-300'],
+                ['bg-blue-600',   'text-blue-700',   'border-blue-200'],
+                ['bg-emerald-600','text-emerald-700','border-emerald-200'],
+                ['bg-amber-500',  'text-amber-700',  'border-amber-200'],
+                ['bg-rose-600',   'text-rose-700',   'border-rose-200'],
+                ['bg-violet-600', 'text-violet-700', 'border-violet-200'],
+                ['bg-cyan-600',   'text-cyan-700',   'border-cyan-200'],
+                ['bg-indigo-600', 'text-indigo-700', 'border-indigo-200'],
+                ['bg-fuchsia-600','text-fuchsia-700','border-fuchsia-200'],
+                ['bg-stone-700',  'text-stone-700',  'border-stone-300'],
+            );
+            my ($bg, $fg, $bd) = @{ $PAL[$gi++ % @PAL] };
+            my ($badge, $name, $sub);
+            if ($p =~ /^(第\S+部)\s+(.+)$/) { ($badge, $name, $sub) = ($1, $2, "$range・" . scalar(@$ids) . '本'); }
+            elsif (@$ids == 1)              { ($badge, $name, $sub) = ($p, $META{ $ids->[0] }{subtitle} // $range, $range); }
+            else                            { ($badge, $name, $sub) = ($p, $range, scalar(@$ids) . '本'); }
+            $html .= qq{<details class="group mt-3 overflow-hidden rounded-xl border-2 $bd bg-white shadow-sm transition hover:shadow-md">}
+                   . '<summary class="flex cursor-pointer select-none items-center gap-3 px-3 py-3 sm:px-4">'
+                   . qq{<span class="flex-none rounded-lg $bg px-2.5 py-1.5 text-sm font-black tracking-wide text-white sm:text-base">} . esc($badge) . '</span>'
+                   . qq{<span class="min-w-0 flex-1"><span class="block text-lg font-black leading-snug $fg sm:text-xl">} . esc($name) . '</span>'
+                   . '<span class="block text-xs font-bold text-gray-500">' . esc($sub) . '</span></span>'
+                   . '<span aria-hidden="true" class="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-gray-100 text-xs text-gray-500 transition-transform group-open:rotate-180">▼</span></summary>'
                    . '<ol class="divide-y divide-gray-100 border-t border-gray-100">';
             for my $id (@$ids) {
                 my $m    = $META{$id};
@@ -1891,16 +1912,21 @@ if (-e "$SRC/guide.txt") {
 sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに絞る
     my $mode  = shift;
     my $start = $mode eq 'all' ? "#$IDS[0]" : "$IDS[0].html";
-    my $cont  = $mode eq 'all' ? '' : qq{<a id="cta-continue" href="$start" class="hidden rounded-md bg-amber-400 px-5 py-3 font-black text-gray-900 transition hover:bg-amber-300">続きから読む →<span data-label class="mt-0.5 block text-xs font-bold text-gray-700"></span></a>};
-    return qq{<section class="relative overflow-hidden bg-gray-900 text-white">}
-         . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-0 opacity-[0.08]"><div class="absolute left-0 right-0 top-24 h-px bg-white"></div><div class="absolute bottom-0 left-1/2 top-24 w-px bg-white"></div>}
-         . qq{<div class="absolute left-[12%] top-8 font-serif text-5xl font-black sm:text-7xl">借方</div><div class="absolute right-[12%] top-8 font-serif text-5xl font-black sm:text-7xl">貸方</div></div>}
-         . qq{<div class="relative mx-auto max-w-3xl px-4 pb-12 pt-16 sm:px-6 sm:pb-16 sm:pt-24">}
-         . qq{<h1 class="font-serif text-[2.6rem] font-black leading-[1.2] sm:text-6xl">$HERO</h1>}
-         . qq{<p class="mt-4 font-bold text-amber-300 text-balance [word-break:auto-phrase] sm:text-lg">$BOOK_SUB</p>}
+    my $cont  = $mode eq 'all' ? '' : qq{<a id="cta-continue" href="$start" class="hidden rounded-full bg-white px-6 py-3.5 font-black text-gray-900 shadow-lg ring-2 ring-white/40 transition hover:-translate-y-0.5 hover:shadow-xl">続きから読む →<span data-label class="mt-0.5 block text-xs font-bold text-gray-600"></span></a>};
+    # 表紙の特徴バッジ（book.txt の「@chips A | B | …」で変えられる）
+    my @chips = split /\s*\|\s*/, ($CFG{chips} // '');
+    my $chips = join '', map { qq{<span class="rounded-full bg-white/15 px-3 py-1.5 text-xs font-black text-white ring-1 ring-white/30 backdrop-blur sm:text-sm">} . esc($_) . '</span>' } @chips;
+    my $hook  = $CFG{hook} ? qq{<p class="inline-block -rotate-1 rounded-lg bg-yellow-300 px-3 py-1.5 text-sm font-black text-gray-900 shadow-md sm:text-base">} . esc($CFG{hook}) . '</p>' : '';
+    return qq{<section class="relative overflow-hidden bg-gradient-to-br from-indigo-950 via-violet-800 to-fuchsia-600 text-white">}
+         . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-0"><div class="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-amber-400/40 blur-3xl"></div><div class="absolute -bottom-32 right-[-6rem] h-96 w-96 rounded-full bg-pink-500/40 blur-3xl"></div><div class="absolute right-[8%] top-10 rotate-6 font-serif text-6xl font-black text-white/10 sm:text-8xl">借方｜貸方</div></div>}
+         . qq{<div class="relative mx-auto max-w-3xl px-4 pb-14 pt-14 sm:px-6 sm:pb-20 sm:pt-20">}
+         . $hook
+         . qq{<h1 class="mt-5 font-serif text-[2.8rem] font-black leading-[1.15] drop-shadow-sm sm:text-7xl">$HERO</h1>}
+         . qq{<p class="mt-4 font-bold text-amber-200 text-balance [word-break:auto-phrase] sm:text-lg">$BOOK_SUB</p>}
+         . ($chips ? qq{<div class="mt-6 flex flex-wrap gap-2">$chips</div>} : '')
          . qq{<div class="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">$cont}
-         . qq{<a id="cta-start" href="$start" class="rounded-md bg-amber-400 px-5 py-3 font-black text-gray-900 transition hover:bg-amber-300">$START →</a>}
-         . qq{<a href="#guide" class="text-sm font-bold text-gray-300 underline decoration-gray-500 underline-offset-4 transition hover:text-white">このサイトの使い方</a></div>}
+         . qq{<a id="cta-start" href="$start" class="rounded-full bg-gradient-to-r from-amber-300 to-yellow-400 px-7 py-3.5 text-lg font-black text-gray-900 shadow-lg shadow-amber-500/30 transition hover:-translate-y-0.5 hover:shadow-xl">$START →</a>}
+         . qq{<a href="#guide" class="text-sm font-bold text-white/80 underline decoration-white/40 underline-offset-4 transition hover:text-white">このサイトの使い方</a></div>}
          . qq{</div></section>\n};
 }
 
