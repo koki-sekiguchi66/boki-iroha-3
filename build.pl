@@ -30,6 +30,8 @@
 #               選ぶまで解説 ::answer は開かない）
 #    データ（入れ子不可）:
 #      journal  … 「借方科目 金額 | 貸方科目 金額」（貸借一致を自動検証）
+#                 見出しの先頭に【…】を書くと、演習の入力欄の見出しにその文字を使う（例：「::journal 【(1) 期首商品】しーくり」）。
+#                 同じ番号の仕訳が複数あるときは、問題文に出てくる当事者名（会社名など）を自動で見出しに足す
 #      taccount … 「摘要 金額 | 摘要 金額」、合計行は「= 金額 | 金額」
 #      table    … パイプ区切り。1行目が見出し。"!!" 行で2段見出し（"受入*3" = 3列結合）
 #                 "|=" で始まる行は強調行。引数の先頭に compact / sum / split:N を付けられる
@@ -742,6 +744,7 @@ sub distractors {
 
 sub jlabel {    # 仕訳の見出しのうち、答えのヒントにならない部分だけを使う
     my ($cap, $i) = @_;
+    return $1 if trim($cap // '') =~ /^【(.+?)】/;    # 【…】で明示した見出しを優先する（答えのヒントにならない語だけを書く）
     my ($f) = split /[\s：:（、。]/, trim($cap // '');
     $f //= '';
     return $f if $f =~ /^(?:\(\d+\)|[①-⑳]|\d+\.|\d+月\d+日|翌期\d+月\d+日|期首|期中|期末|決算日|翌期首|.{1,5}時)$/;
@@ -1179,6 +1182,7 @@ sub r_mock {
 sub caption_journal {
     my $arg = shift;
     return '' if $arg eq '';
+    $arg =~ s/^【(.+?)】\s*/$1　/;    # 【入力欄の見出し】は、本文ではカッコを外して表示する
     return qq{<figcaption class="mb-2 flex items-start gap-2 text-sm leading-relaxed text-gray-700"><span class="mt-0.5 flex-none rounded bg-gray-800 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-white">仕訳</span><span>} . inl($arg) . '</span></figcaption>';
 }
 
