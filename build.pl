@@ -766,8 +766,26 @@ sub jr_widget {
                 }
             }
             next if $bad || !@d || !@c;
-            push @js, { l => jlabel($jn->{arg}, scalar(@js) + 1), d => \@d, c => \@c };
+            push @js, { l => jlabel($jn->{arg}, scalar(@js) + 1), a => $jn->{arg}, d => \@d, c => \@c };
         }
+    }
+    # 同じ番号の仕訳が複数ある（例：(1) おかわり堂 と (1) 洛北ミート）ときは、番号の後ろの
+    # 当事者の名前（「（」や空白の前まで）を見出しに足して区別する。
+    # 答えのヒントにならないよう、問題文にも出てくる語（会社名など）に限る
+    my $qtext = join ' ', map {
+          $_->{t} eq 'p'  ? $_->{text}
+        : $_->{t} eq 'ul' ? (map { $_->[1] } @{ $_->{items} })
+        : $_->{t} eq 'ol' ? @{ $_->{items} }
+        : ()
+    } @$kids;
+    my %nlab;
+    $nlab{ $_->{l} }++ for @js;
+    for my $j (@js) {
+        next unless $nlab{ $j->{l} } > 1;
+        my $rest = trim($j->{a} // '');
+        $rest =~ s/^\Q$j->{l}\E\s*//;
+        my ($who) = split /[\s：:（、。]/, $rest;
+        $j->{l} .= " $who" if defined $who && $who ne '' && length($who) <= 12 && index($qtext, $who) >= 0;
     }
     return '' if !@js || @js > 8;
     $NCHK{try}++ if ($CTX{mode} // '') ne 'all';
