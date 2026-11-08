@@ -2,37 +2,63 @@
 
 <div id="guide" class="scroll-mt-20"></div>
 
-<section class="my-12">
-<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#C8462E]"><span>FOR READERS</span><span class="h-px flex-1 bg-[#C8462E]/30"></span></p>
-<h2 class="mt-3 font-serif text-2xl font-black leading-snug text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2rem]">こんな人のための、簿記3級テキスト</h2>
-<div class="mt-6 border-t border-[#1B2430]">
-<div class="hidden grid-cols-2 border-b border-[#1B2430]/30 text-[11px] font-bold tracking-[0.2em] text-[#6A707A] sm:grid"><p class="py-2 sm:border-r sm:border-[#1B2430]/15">借方 ― こんな悩み</p><p class="py-2 pl-5">貸方 ― このテキストの答え</p></div>
-<div class="grid border-b border-[#1B2430]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug sm:text-[17px] text-[#1B2430] sm:border-r sm:border-[#1B2430]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A]">01</span>テキストを開くと、3ページで眠くなる</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-4 sm:pl-5 sm:text-sm">1章ごとに「黒字なのに、なぜ潰れた？」のような事件が起きる。続きが気になるから、気づけば読み進めている。</p></div>
-<div class="grid border-b border-[#1B2430]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug sm:text-[17px] text-[#1B2430] sm:border-r sm:border-[#1B2430]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A]">02</span>仕訳を丸暗記しては、すぐ忘れる</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-4 sm:pl-5 sm:text-sm">「なぜ借方なのか」を、事件の謎解きの中で理解する。理由で覚えた仕訳は、本番でも崩れない。</p></div>
-<div class="grid border-b border-[#1B2430]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug sm:text-[17px] text-[#1B2430] sm:border-r sm:border-[#1B2430]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A]">03</span>未経験から、経理・事務の仕事に転職したい</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-4 sm:pl-5 sm:text-sm">月次の試算表、決算整理、資金繰り表、請求書からの仕訳。経理の現場の1年をたどりながら学ぶので、面接で「簿記を仕事でどう使うか」を自分の言葉で話せる。</p></div>
-<div class="grid border-b border-[#1B2430]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug sm:text-[17px] text-[#1B2430] sm:border-r sm:border-[#1B2430]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A]">04</span>営業や販売の仕事で、数字に強くなりたい</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-4 sm:pl-5 sm:text-sm">取引先の決算書のどこを見れば危ないかが分かる。値上げ、与信、在庫の判断を、経営者や銀行員の立場で考える発展問題つき。</p></div>
-<div class="grid border-b border-[#1B2430]/15 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug sm:text-[17px] text-[#1B2430] sm:border-r sm:border-[#1B2430]/15"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A]">05</span>就活で、資格を「使える」と言えるようにしたい</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-4 sm:pl-5 sm:text-sm">倒産・粉飾・横領など実際の事件を、学んだ仕訳で読み解く。資格の名前だけでなく、数字で会社を語れる力が身につく。</p></div>
+<div aria-hidden="true" class="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden border-y border-[#1B2430] bg-[#1B2430] py-3.5"><div class="kb-marquee flex w-max whitespace-nowrap font-serif text-sm font-bold tracking-[0.2em] text-[#F6F3EC]/85 sm:text-base"><span class="flex items-center gap-10 pr-10"><span>現金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>当座預金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>売掛金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>繰越商品</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>減価償却累計額</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>貸倒引当金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>前受金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>未払消費税</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>仮払法人税等</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>電子記録債権</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>繰越利益剰余金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>現金過不足</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>前払費用</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>未収収益</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>資本金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>売上原価</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>現金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>当座預金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>売掛金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>繰越商品</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>減価償却累計額</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>貸倒引当金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>前受金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>未払消費税</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>仮払法人税等</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>電子記録債権</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>繰越利益剰余金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>現金過不足</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>前払費用</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>未収収益</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>資本金</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span><span class="flex items-center gap-10 pr-10"><span>売上原価</span><span aria-hidden="true" class="h-1.5 w-1.5 rotate-45 bg-[#C8462E]"></span></span></div></div>
+
+<section class="my-16 sm:my-24 lg:grid lg:grid-cols-12 lg:gap-12">
+<div class="lg:col-span-4"><div class="lg:sticky lg:top-24">
+<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#C8462E"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#C8462E"></span><span>FOR READERS</span></p>
+<h2 class="mt-3 font-serif text-[1.65rem] font-black leading-snug text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2.1rem] lg:text-[2.4rem]">こんな人のための、簿記3級テキスト</h2>
+<p class="mt-4 max-w-sm text-sm leading-relaxed text-[#6A707A]">簿記でつまずく理由は、人それぞれ。あなたの悩みに、このテキストはこう答える。</p>
+</div></div>
+<div class="mt-8 min-w-0 lg:col-span-8 lg:mt-1">
+<div class="border-t border-[#1B2430]">
+<div class="hidden grid-cols-2 border-b border-[#1B2430]/30 text-[11px] font-bold tracking-[0.2em] text-[#6A707A] sm:grid"><p class="py-2.5 sm:border-r sm:border-[#1B2430]/15">借方 ― こんな悩み</p><p class="py-2.5 pl-6">貸方 ― このテキストの答え</p></div>
+<div class="group grid border-b border-[#1B2430]/15 transition hover:bg-white/60 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug text-[#1B2430] sm:border-r sm:border-[#1B2430]/15 sm:py-5 sm:text-lg"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A] transition group-hover:text-[#C8462E]">01</span>テキストを開くと、3ページで眠くなる</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-5 sm:pl-6 sm:text-sm">1章ごとに「黒字なのに、なぜ潰れた？」のような事件が起きる。続きが気になるから、気づけば読み進めている。</p></div>
+<div class="group grid border-b border-[#1B2430]/15 transition hover:bg-white/60 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug text-[#1B2430] sm:border-r sm:border-[#1B2430]/15 sm:py-5 sm:text-lg"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A] transition group-hover:text-[#C8462E]">02</span>仕訳を丸暗記しては、すぐ忘れる</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-5 sm:pl-6 sm:text-sm">「なぜ借方なのか」を、事件の謎解きの中で理解する。理由で覚えた仕訳は、本番でも崩れない。</p></div>
+<div class="group grid border-b border-[#1B2430]/15 transition hover:bg-white/60 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug text-[#1B2430] sm:border-r sm:border-[#1B2430]/15 sm:py-5 sm:text-lg"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A] transition group-hover:text-[#C8462E]">03</span>未経験から、経理・事務の仕事に転職したい</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-5 sm:pl-6 sm:text-sm">月次の試算表、決算整理、資金繰り表、請求書からの仕訳。経理の現場の1年をたどりながら学ぶので、面接で「簿記を仕事でどう使うか」を自分の言葉で話せる。</p></div>
+<div class="group grid border-b border-[#1B2430]/15 transition hover:bg-white/60 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug text-[#1B2430] sm:border-r sm:border-[#1B2430]/15 sm:py-5 sm:text-lg"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A] transition group-hover:text-[#C8462E]">04</span>営業や販売の仕事で、数字に強くなりたい</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-5 sm:pl-6 sm:text-sm">取引先の決算書のどこを見れば危ないかが分かる。値上げ、与信、在庫の判断を、経営者や銀行員の立場で考える発展問題つき。</p></div>
+<div class="group grid border-b border-[#1B2430]/15 transition hover:bg-white/60 sm:grid-cols-2"><p class="flex gap-3 py-4 pr-4 font-serif text-base font-black leading-snug text-[#1B2430] sm:border-r sm:border-[#1B2430]/15 sm:py-5 sm:text-lg"><span class="flex-none font-sans text-xs font-bold leading-6 text-[#6A707A] transition group-hover:text-[#C8462E]">05</span>就活で、資格を「使える」と言えるようにしたい</p><p class="-mt-1 pb-4 pl-8 text-[13px] leading-relaxed text-[#3D4551] sm:mt-0 sm:py-5 sm:pl-6 sm:text-sm">倒産・粉飾・横領など実際の事件を、学んだ仕訳で読み解く。資格の名前だけでなく、数字で会社を語れる力が身につく。</p></div>
+</div>
 </div>
 </section>
 
-<section class="my-14">
-<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#C8462E]"><span>WHY THIS BOOK</span><span class="h-px flex-1 bg-[#C8462E]/30"></span></p>
-<h2 class="mt-3 font-serif text-2xl font-black leading-snug text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2rem]">このテキストの3つの強み</h2>
-<div class="mt-6 grid gap-7 sm:grid-cols-3 sm:gap-8">
-<div class="border-t border-[#1B2430]/25 pt-5"><span aria-hidden="true" class="block h-0.5 w-8 bg-[#C8462E]"></span><p class="mt-4 font-serif text-lg font-black leading-snug text-[#1B2430]">物語で、ルールの「なぜ」がわかる</p><p class="mt-2 text-sm leading-relaxed text-[#3D4551]">父の定食屋の黒字倒産から始まる、新人・大川ひよりの1年。21の事件の答えが、そのまま3級の論点になっている。</p></div>
-<div class="border-t border-[#1B2430]/25 pt-5"><span aria-hidden="true" class="block h-0.5 w-8 bg-[#C8462E]"></span><p class="mt-4 font-serif text-lg font-black leading-snug text-[#1B2430]">手を動かして、その場で身につく</p><p class="mt-2 text-sm leading-relaxed text-[#3D4551]">すべての例題と確認問題に入力欄。勘定科目を選び、金額を入れて答え合わせ。ネット試験と同じ感覚で練習できる。</p></div>
-<div class="border-t border-[#1B2430]/25 pt-5"><span aria-hidden="true" class="block h-0.5 w-8 bg-[#C8462E]"></span><p class="mt-4 font-serif text-lg font-black leading-snug text-[#1B2430]">合格のその先まで、つながる</p><p class="mt-2 text-sm leading-relaxed text-[#3D4551]">実際の事件を仕訳で読み解き、資金繰りや与信の判断にも挑戦する。経理への転職や2級・1級、日々の仕事で使う考え方が、自然に身につく。</p></div>
+<section class="relative left-1/2 my-16 w-screen -translate-x-1/2 bg-[#1B2430] py-16 sm:my-24 sm:py-24">
+<div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+<div class="lg:grid lg:grid-cols-12 lg:gap-12">
+<div class="lg:col-span-4">
+<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em] text-[#B8862F]"><span aria-hidden="true" class="h-2 w-2 flex-none bg-[#B8862F]"></span><span>WHY THIS BOOK</span></p>
+<h2 class="mt-3 font-serif text-[1.65rem] font-black leading-snug text-[#F6F3EC] text-balance [word-break:auto-phrase] sm:text-[2.1rem] lg:text-[2.4rem]">このテキストの3つの強み</h2>
+<p class="mt-4 max-w-sm text-sm leading-relaxed text-[#F6F3EC]/60">読み物として面白く、手を動かして身につき、仕事にまでつながる。3級の教科書に、この3つをすべて求めた。</p>
 </div>
+<div class="mt-10 grid gap-10 sm:grid-cols-3 sm:gap-8 lg:col-span-8 lg:mt-1">
+<div class="border-t border-[#F6F3EC]/20 pt-6"><span aria-hidden="true" class="block h-[3px] w-10" style="background:#C8462E"></span><p class="mt-5 font-serif text-xl font-black leading-snug text-[#F6F3EC] sm:text-[1.4rem]">物語で、ルールの「なぜ」がわかる</p><p class="mt-3 text-sm leading-relaxed text-[#F6F3EC]/70">父の定食屋の黒字倒産から始まる、新人・大川ひよりの1年。21の事件の答えが、そのまま3級の論点になっている。</p></div>
+<div class="border-t border-[#F6F3EC]/20 pt-6"><span aria-hidden="true" class="block h-[3px] w-10" style="background:#B8862F"></span><p class="mt-5 font-serif text-xl font-black leading-snug text-[#F6F3EC] sm:text-[1.4rem]">手を動かして、その場で身につく</p><p class="mt-3 text-sm leading-relaxed text-[#F6F3EC]/70">すべての例題と確認問題に入力欄。勘定科目を選び、金額を入れて答え合わせ。ネット試験と同じ感覚で練習できる。</p></div>
+<div class="border-t border-[#F6F3EC]/20 pt-6"><span aria-hidden="true" class="block h-[3px] w-10" style="background:#3E7C7A"></span><p class="mt-5 font-serif text-xl font-black leading-snug text-[#F6F3EC] sm:text-[1.4rem]">合格のその先まで、つながる</p><p class="mt-3 text-sm leading-relaxed text-[#F6F3EC]/70">実際の事件を仕訳で読み解き、資金繰りや与信の判断にも挑戦する。経理への転職や2級・1級、日々の仕事で使う考え方が、自然に身につく。</p></div>
+</div></div></div>
 </section>
 
-## このテキストの特徴
+<section class="my-16 sm:my-24 lg:grid lg:grid-cols-12 lg:gap-12">
+<div class="lg:col-span-4"><div class="lg:sticky lg:top-24">
+<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#6D4C6A"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#6D4C6A"></span><span>ABOUT</span></p>
+<h2 class="mt-3 font-serif text-[1.65rem] font-black leading-snug text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2.1rem] lg:text-[2.4rem]">このテキストの特徴</h2>
+
+</div></div>
+<div class="mt-8 min-w-0 lg:col-span-8 lg:mt-1">
 
 日商簿記3級の出題範囲を、すべてカバーしている。そのうえで目指しているのは、試験の合格だけではない。**数字の裏にある「会社の生と死」を読めるようになること**だ。
 1人の新人の1年間を追う物語になっている。父の定食屋が黒字のまま倒産したことをきっかけに、京都の鴨川会計事務所に入った大川ひより。簿記の知識ゼロから出発した彼女は、夜行バス、学生街の牛丼チェーン、24時間ジム、食肉卸、赤字のSaaS企業という5つの顧問先で起きる事件を、帳簿の中から解いていく。あなたも、ひよりと一緒に仕訳を切りながら、簿記のルールがなぜそうなっているのかを1章ずつ確かめてほしい。読み終えたとき、あなたは3級の仕訳と決算を自分の手で組み立てられるだけでなく、ニュースで見る「黒字倒産」や「粉飾決算」の意味を、勘定科目の言葉で説明できるようになっている。
 経理・会計の仕事への転職を考えている人には、とくに終章と各章の「判断してみよう」を読んでほしい。3級の知識が、職場でどんな判断に使われるのかが見えてくる。
 
+</div>
+</section>
 
-## 3級の範囲を、どう解説するか
+<section class="my-16 sm:my-24 lg:grid lg:grid-cols-12 lg:gap-12">
+<div class="lg:col-span-4"><div class="lg:sticky lg:top-24">
+<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#3E7C7A"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#3E7C7A"></span><span>HOW IT COVERS</span></p>
+<h2 class="mt-3 font-serif text-[1.65rem] font-black leading-snug text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2.1rem] lg:text-[2.4rem]">3級の範囲を、どう解説するか</h2>
+<p class="mt-4 max-w-sm text-sm leading-relaxed text-[#6A707A]">本試験の3つの大問と、本書の章の対応。読み進めるだけで、必要な力がそろう。</p>
+</div></div>
+<div class="mt-8 min-w-0 lg:col-span-8 lg:mt-1">
 
 本試験は、第1問（仕訳）・第2問（帳簿など）・第3問（決算）の3つの大問でできている。本書は、物語の順に読み進めるだけで、3つの大問に必要な力がそろうように章を並べている。
 
@@ -56,14 +82,32 @@
 
 2027年4月以降の試験で予定されている出題範囲の改定（2025年12月公表の暫定版）にも対応している。追加される論点には {{new:2027年度〜}}、範囲から外れる見込みの論点には {{old:2027年度〜範囲外}} の印をつけた。受験前には、日本商工会議所の公式情報で最新の出題範囲を必ず確認してほしい。
 
-## 目次
+</div>
+</section>
 
-部の名前を押すと、その部の章が開く。
+<section class="my-16 sm:my-24">
+<div class="lg:grid lg:grid-cols-12 lg:items-end lg:gap-12">
+<div class="lg:col-span-4">
+<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#2F4A6D"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#2F4A6D"></span><span>CONTENTS</span></p>
+<h2 class="mt-3 font-serif text-[1.65rem] font-black leading-snug text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2.1rem] lg:text-[2.4rem]">目次</h2>
+</div>
+<p class="mt-4 text-sm leading-relaxed text-[#6A707A] lg:col-span-8 lg:mt-0">序章から終章までの21章と、付録4本。部の名前を押すと、その部の章が開く。</p>
+</div>
+<div class="mt-8">
 
 ::toc compact
 ::
 
-## おすすめの学習の進め方
+</div>
+</section>
+
+<section class="my-16 sm:my-24 lg:grid lg:grid-cols-12 lg:gap-12">
+<div class="lg:col-span-4"><div class="lg:sticky lg:top-24">
+<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#B8862F"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#B8862F"></span><span>HOW TO STUDY</span></p>
+<h2 class="mt-3 font-serif text-[1.65rem] font-black leading-snug text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2.1rem] lg:text-[2.4rem]">おすすめの学習の進め方</h2>
+<p class="mt-4 max-w-sm text-sm leading-relaxed text-[#6A707A]">物語として読み、手で書き、反復し、本番形式で仕上げる。</p>
+</div></div>
+<div class="mt-8 min-w-0 lg:col-span-8 lg:mt-1">
 
 ::steps 合格までの4ステップ
 1周目：物語として通読する | 確認問題は飛ばしてよい。まずは「なぜそうなるのか」をつかむ。序章から終章まで、一気に読み切ることを優先しよう
@@ -72,9 +116,16 @@
 決算問題と模擬試験で仕上げる | 第18・19章の総合例題と付録Bの攻略法を確認したら、付録Dの模擬試験を「模擬試験モード」で60分で解き、間違えた章を復習する。そのうえで、ネット試験の模擬問題や過去問で時間配分を体に覚え込ませる
 ::
 
-## ボックスと演習の見方
+</div>
+</section>
 
-各章は、色分けしたボックスを組み合わせて作られている。色と役割を覚えておくと、復習のときに目的の情報へすぐたどり着ける。押すと、見本つきの説明が開く。
+<section class="my-16 sm:my-24 lg:grid lg:grid-cols-12 lg:gap-12">
+<div class="lg:col-span-4"><div class="lg:sticky lg:top-24">
+<p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#5E7D63"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#5E7D63"></span><span>GUIDE</span></p>
+<h2 class="mt-3 font-serif text-[1.65rem] font-black leading-snug text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2.1rem] lg:text-[2.4rem]">ボックスと演習の見方</h2>
+<p class="mt-4 max-w-sm text-sm leading-relaxed text-[#6A707A]">各章は、色分けしたボックスを組み合わせて作られている。色と役割を覚えておくと、復習のときに目的の情報へすぐたどり着ける。押すと、見本つきの説明が開く。</p>
+</div></div>
+<div class="mt-8 min-w-0 lg:col-span-8 lg:mt-1">
 
 <details class="group my-3 border border-[#1B2430]/25 bg-white/70"><summary class="flex cursor-pointer select-none items-center justify-between gap-3 px-5 py-4 font-serif font-black text-[#1B2430] hover:bg-[#F6F3EC]"><span>7種類のボックスの見本を開く</span><span aria-hidden="true" class="flex h-7 w-7 flex-none items-center justify-center border border-[#1B2430]/30 text-base leading-none transition group-open:border-[#C8462E] group-open:text-[#C8462E]"><span class="block transition-transform group-open:rotate-45">＋</span></span></summary><div class="border-t border-[#1B2430]/15 bg-white px-4 pb-2 sm:px-5">
 
@@ -146,6 +197,9 @@
 ::
 
 </div></details>
+
+</div>
+</section>
 
 ::note
 ※物語に登場する企業・人物・数値は、学習用に設計した架空のものです。実在の企業・団体とは関係ありません。「実際にあった話」で紹介する事例と統計は、公開されている報道・統計資料にもとづき、出典を併記しています。スマートフォンでの閲覧に最適化しています。

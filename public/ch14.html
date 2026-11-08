@@ -37,7 +37,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@700;900&display=swap" rel="stylesheet">
 <style>
   html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  html, body { overflow-x: clip; }  /* 画面いっぱいの帯（w-screen）で横スクロールが出ないように */
   summary { list-style: none; }
+  /* 表紙の流れる文字の帯（動きを減らす設定では止める） */
+  @keyframes kb-marquee { to { transform: translateX(-50%); } }
+  .kb-marquee { animation: kb-marquee 60s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .kb-marquee { animation: none; } }
   .kb-ghost { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; transform: translate(-50%, -50%); opacity: .95; }
   /* 模擬試験モード中は、解答・答え合わせを隠す */
   body.kb-exam .kb-answer, body.kb-exam .kb-check, body.kb-exam .kb-reveal, body.kb-exam .kb-jres, body.kb-exam .kb-result { display: none !important; }
@@ -210,9 +215,10 @@
 <div id="kb-pop" role="dialog" aria-label="用語の説明" class="no-print absolute z-50 hidden w-[min(20rem,calc(100vw-1.5rem))] rounded-lg border border-gray-200 bg-white p-4 text-left text-gray-800 shadow-xl"><div class="flex items-start gap-2"><div class="min-w-0 flex-1"><p class="text-[11px] leading-tight text-gray-500" data-f="y"></p><p class="text-lg font-black leading-snug text-gray-900" data-f="n"></p></div><button type="button" data-close class="-mr-2 -mt-2 flex h-9 w-9 flex-none items-center justify-center rounded-full text-xl leading-none text-gray-400 hover:bg-gray-100 hover:text-gray-700" aria-label="閉じる">×</button></div><div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1"><span class="rounded px-1.5 py-0.5 text-[11px] font-bold" data-f="c"></span><span class="text-[11px] font-bold text-gray-500" data-f="hp"></span><span class="hidden rounded px-1.5 py-0.5 text-[11px] font-bold" data-f="b"></span></div><p class="mt-2 text-sm leading-relaxed text-gray-700" data-f="d"></p><div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold"><a class="text-amber-700 underline decoration-amber-400 decoration-2 underline-offset-4" data-f="h"></a><a href="apx-a.html" class="text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-gray-800">勘定科目辞典</a></div><span class="hidden bg-amber-100 text-amber-800 bg-blue-100 text-blue-800 bg-emerald-100 text-emerald-800 bg-gray-100 text-gray-700 bg-rose-100 text-rose-800 bg-slate-200 text-slate-800 bg-violet-100 text-violet-800 bg-amber-100 text-amber-800 ring-1 ring-amber-300 bg-gray-100 text-gray-600 ring-1 ring-gray-300"></span></div>
 
 </main>
-<footer class="mt-16 border-t border-gray-200 bg-white">
-  <div class="mx-auto max-w-3xl space-y-2 px-4 py-10 text-xs leading-relaxed text-gray-500 sm:px-6">
-    <p class="font-bold text-gray-700">ケースで学ぶ簿記3級 ― 身近な会社の数字で、日商簿記3級の全範囲を学ぶ</p>
+<footer class="mt-20 bg-[#1B2430]">
+  <div class="mx-auto max-w-3xl space-y-2 px-4 py-12 text-xs leading-relaxed text-[#F6F3EC]/60 sm:px-6">
+    <p class="font-serif text-base font-black text-[#F6F3EC]">ケースで学ぶ簿記3級</p>
+    <p class="font-bold text-[#F6F3EC]/80">身近な会社の数字で、日商簿記3級の全範囲を学ぶ</p>
     <p>物語に登場する企業・人物・数値は、学習のために設計した架空のものです。実在の企業・団体・商品とは関係ありません。「実際にあった話」で紹介する事例と統計は、公開されている報道・統計資料にもとづき、出典を併記しています。</p>
     <p>出題範囲は日本商工会議所「商工会議所簿記検定試験 出題区分表」（2022年度適用版。2026年度の試験まで適用）に準拠し、2027年4月以降の試験に適用される改定（暫定版）の要点も併記しています。受験前に必ず日本商工会議所の公式情報をご確認ください。</p>
   </div>

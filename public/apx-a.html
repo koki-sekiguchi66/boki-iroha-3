@@ -37,7 +37,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@700;900&display=swap" rel="stylesheet">
 <style>
   html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  html, body { overflow-x: clip; }  /* 画面いっぱいの帯（w-screen）で横スクロールが出ないように */
   summary { list-style: none; }
+  /* 表紙の流れる文字の帯（動きを減らす設定では止める） */
+  @keyframes kb-marquee { to { transform: translateX(-50%); } }
+  .kb-marquee { animation: kb-marquee 60s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .kb-marquee { animation: none; } }
   .kb-ghost { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; transform: translate(-50%, -50%); opacity: .95; }
   /* 模擬試験モード中は、解答・答え合わせを隠す */
   body.kb-exam .kb-answer, body.kb-exam .kb-check, body.kb-exam .kb-reveal, body.kb-exam .kb-jres, body.kb-exam .kb-result { display: none !important; }
@@ -81,9 +86,10 @@
 
 <nav class="no-print mt-16 grid gap-3 sm:grid-cols-2"><a href="ch20.html" class="group rounded-lg border border-gray-300 bg-white p-4 transition hover:border-gray-900"><p class="text-xs font-bold text-gray-400">← 前へ　終章</p><p class="mt-1 font-bold leading-snug text-gray-900 group-hover:underline">2級・1級、そして実務へ</p></a><a href="apx-b.html" class="group rounded-lg border border-gray-900 bg-gray-900 p-4 text-right transition hover:bg-gray-800 sm:col-start-2"><p class="text-xs font-bold text-amber-400">次へ　付録B →</p><p class="mt-1 font-bold leading-snug text-white group-hover:underline">試験攻略マニュアル</p></a></nav>
 </main>
-<footer class="mt-16 border-t border-gray-200 bg-white">
-  <div class="mx-auto max-w-3xl space-y-2 px-4 py-10 text-xs leading-relaxed text-gray-500 sm:px-6">
-    <p class="font-bold text-gray-700">ケースで学ぶ簿記3級 ― 身近な会社の数字で、日商簿記3級の全範囲を学ぶ</p>
+<footer class="mt-20 bg-[#1B2430]">
+  <div class="mx-auto max-w-3xl space-y-2 px-4 py-12 text-xs leading-relaxed text-[#F6F3EC]/60 sm:px-6">
+    <p class="font-serif text-base font-black text-[#F6F3EC]">ケースで学ぶ簿記3級</p>
+    <p class="font-bold text-[#F6F3EC]/80">身近な会社の数字で、日商簿記3級の全範囲を学ぶ</p>
     <p>物語に登場する企業・人物・数値は、学習のために設計した架空のものです。実在の企業・団体・商品とは関係ありません。「実際にあった話」で紹介する事例と統計は、公開されている報道・統計資料にもとづき、出典を併記しています。</p>
     <p>出題範囲は日本商工会議所「商工会議所簿記検定試験 出題区分表」（2022年度適用版。2026年度の試験まで適用）に準拠し、2027年4月以降の試験に適用される改定（暫定版）の要点も併記しています。受験前に必ず日本商工会議所の公式情報をご確認ください。</p>
   </div>
