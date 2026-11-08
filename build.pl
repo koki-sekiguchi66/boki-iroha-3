@@ -1936,7 +1936,7 @@ sub cover_top {    # 表紙：書名・つかみ・開始ボタンと、学習�
         . qq{<p class="mt-2 text-center text-[11px] text-[#6A707A]">合格まで、責任をもってお預かりします</p>}
         . qq{</div>}
         . qq{<div aria-hidden="true" class="h-[7px] w-full" style="$zig"></div>}
-        . qq{<div aria-hidden="true" class="absolute -left-7 bottom-10 flex h-[5.5rem] w-[5.5rem] rotate-[-14deg] items-center justify-center rounded-full border-2 border-[#C8462E]/80 font-serif text-[13px] font-black leading-tight text-[#C8462E]/85"><span class="text-center">全範囲<br>収録</span></div>}
+        . qq{<div aria-hidden="true" class="absolute -left-3 bottom-10 flex h-[5.5rem] w-[5.5rem] rotate-[-14deg] sm:-left-7 items-center justify-center rounded-full border-2 border-[#C8462E]/80 font-serif text-[13px] font-black leading-tight text-[#C8462E]/85"><span class="text-center">全範囲<br>収録</span></div>}
         . '</div>' : '';
 
     my $ruled = 'background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%27160%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.9%27 numOctaves=%272%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 0.11 0 0 0 0 0.14 0 0 0 0 0.19 0 0 0 .07 0%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E"),repeating-linear-gradient(to bottom,transparent 0,transparent 39px,rgba(47,74,109,.08) 39px,rgba(47,74,109,.08) 40px)';

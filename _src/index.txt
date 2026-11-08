@@ -56,7 +56,7 @@
 <section class="my-24 sm:my-32">
 <figure class="relative mx-auto max-w-4xl text-center">
 <span aria-hidden="true" class="pointer-events-none absolute -top-10 left-0 font-serif text-[7rem] leading-none text-[#C8462E]/20 sm:-left-6 sm:text-[11rem]">「</span>
-<blockquote class="relative font-serif text-[1.6rem] font-black leading-[1.6] text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2.4rem] lg:text-[3rem]">帳簿は会社の日記や。<br>嘘を書いたら、<br class="sm:hidden">いつか自分が読むことになる。</blockquote>
+<blockquote class="relative font-serif text-[1.6rem] font-black leading-[1.6] text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2.4rem] lg:text-[3rem]">帳簿は会社の日記や。<br>嘘を書いたら、<br class="sm:hidden">いつか自分が<br class="sm:hidden">読むことになる。</blockquote>
 <figcaption class="mt-8 flex items-center justify-center gap-3 text-xs font-bold tracking-[0.2em] text-[#6A707A]"><span class="h-px w-10 bg-[#1B2430]/30"></span>鴨川会計事務所 所長　― 序章より<span class="h-px w-10 bg-[#1B2430]/30"></span></figcaption>
 </figure>
 </section>
