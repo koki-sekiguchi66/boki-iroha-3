@@ -1942,8 +1942,8 @@ sub cover_top {    # 表紙：書名・ひとこと・開始ボタンだけに�
          . qq{<div class="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-7">$cont}
          . qq{<a id="cta-start" href="$start" class="group inline-flex w-full items-center justify-between gap-8 bg-[#1B2430] px-6 py-4 font-bold tracking-wide text-[#F6F3EC] transition hover:bg-[#C8462E] sm:w-auto">$START<span aria-hidden="true" class="transition group-hover:translate-x-1">→</span></a>}
          . qq{<a href="#guide" class="self-start bg-gradient-to-r from-[#C8462E] to-[#C8462E] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-1 text-sm font-bold text-[#1B2430] transition-[background-size,color] duration-300 hover:bg-[length:100%_1px] hover:text-[#C8462E] sm:self-auto">このサイトの使い方 ↓</a></div>}
-         . qq{</div>$side</div>}
          . ($stats ? qq{<div class="mt-10 grid grid-cols-2 border-b border-l border-[#1B2430]/15 bg-white/50 sm:mt-14 sm:grid-cols-4">$stats</div>} : '')
+         . qq{</div>$side</div>}
          . qq{</div></section>\n};
 }
 
