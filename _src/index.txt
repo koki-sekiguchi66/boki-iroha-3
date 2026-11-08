@@ -5,7 +5,7 @@
 <section class="my-24 sm:my-32 lg:grid lg:grid-cols-12 lg:gap-16">
 <div class="lg:col-span-4"><div class="lg:sticky lg:top-24">
 <p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#C8462E"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#C8462E"></span><span>FOR READERS</span></p>
-<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.75rem]" style="color:#1B2430">こんな人のための、簿記3級テキスト</h2>
+<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.35rem]" style="color:#1B2430">こんな人のための、<br>簿記3級テキスト</h2>
 <p class="mt-5 max-w-sm text-sm leading-[1.9]" style="color:#6A707A">簿記でつまずく理由は、人それぞれ。あなたの悩みに、このテキストはこう答える。</p>
 </div></div>
 <div class="mt-8 min-w-0 lg:col-span-8 lg:mt-1">
@@ -27,7 +27,7 @@
 <div class="lg:grid lg:grid-cols-12 lg:items-end lg:gap-16">
 <div class="lg:col-span-5">
 <p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#B8862F"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#B8862F"></span><span>WHY THIS BOOK</span></p>
-<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.75rem]" style="color:#F6F3EC">このテキストの3つの強み</h2>
+<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.35rem]" style="color:#F6F3EC">このテキストの3つの強み</h2>
 </div>
 <p class="mt-5 max-w-md lg:col-span-7 lg:mt-0 text-sm leading-[1.9]" style="color:#F6F3ECA6">読み物として面白く、手を動かして身につき、仕事にまでつながる。3級の教科書に、この3つをすべて求めた。</p>
 </div>
@@ -41,7 +41,7 @@
 <section class="my-24 sm:my-32 lg:grid lg:grid-cols-12 lg:gap-16">
 <div class="lg:col-span-4"><div class="lg:sticky lg:top-24">
 <p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#6D4C6A"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#6D4C6A"></span><span>ABOUT</span></p>
-<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.75rem]" style="color:#1B2430">このテキストの特徴</h2>
+<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.35rem]" style="color:#1B2430">このテキストの特徴</h2>
 
 </div></div>
 <div class="mt-8 min-w-0 lg:col-span-8 lg:mt-1">
@@ -56,7 +56,7 @@
 <section class="my-24 sm:my-32">
 <figure class="relative mx-auto max-w-4xl text-center">
 <span aria-hidden="true" class="pointer-events-none absolute -top-10 left-0 font-serif text-[7rem] leading-none text-[#C8462E]/20 sm:-left-6 sm:text-[11rem]">「</span>
-<blockquote class="relative font-serif text-[1.6rem] font-black leading-[1.6] text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2.4rem] lg:text-[3rem]">帳簿は会社の日記や。<br>嘘を書いたら、いつか自分が読むことになる。</blockquote>
+<blockquote class="relative font-serif text-[1.6rem] font-black leading-[1.6] text-[#1B2430] text-balance [word-break:auto-phrase] sm:text-[2.4rem] lg:text-[3rem]">帳簿は会社の日記や。<br>嘘を書いたら、<br class="sm:hidden">いつか自分が読むことになる。</blockquote>
 <figcaption class="mt-8 flex items-center justify-center gap-3 text-xs font-bold tracking-[0.2em] text-[#6A707A]"><span class="h-px w-10 bg-[#1B2430]/30"></span>鴨川会計事務所 所長　― 序章より<span class="h-px w-10 bg-[#1B2430]/30"></span></figcaption>
 </figure>
 </section>
@@ -64,7 +64,7 @@
 <section class="my-24 sm:my-32 lg:grid lg:grid-cols-12 lg:gap-16">
 <div class="lg:col-span-4"><div class="lg:sticky lg:top-24">
 <p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#3E7C7A"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#3E7C7A"></span><span>HOW IT COVERS</span></p>
-<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.75rem]" style="color:#1B2430">3級の範囲を、どう解説するか</h2>
+<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.35rem]" style="color:#1B2430">3級の範囲を、どう解説するか</h2>
 <p class="mt-5 max-w-sm text-sm leading-[1.9]" style="color:#6A707A">本試験の3つの大問と、本書の章の対応。読み進めるだけで、必要な力がそろう。</p>
 </div></div>
 <div class="mt-8 min-w-0 lg:col-span-8 lg:mt-1">
@@ -98,7 +98,7 @@
 <div class="lg:grid lg:grid-cols-12 lg:items-end lg:gap-16">
 <div class="lg:col-span-4">
 <p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#2F4A6D"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#2F4A6D"></span><span>CONTENTS</span></p>
-<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.75rem]" style="color:#1B2430">目次</h2>
+<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.35rem]" style="color:#1B2430">目次</h2>
 </div>
 <p class="mt-5 text-sm leading-[1.9] text-[#6A707A] lg:col-span-8 lg:mt-0">序章から終章までの21章と、付録4本。部の名前を押すと、その部の章が開く。</p>
 </div>
@@ -113,7 +113,7 @@
 <section class="my-24 sm:my-32 lg:grid lg:grid-cols-12 lg:gap-16">
 <div class="lg:col-span-4"><div class="lg:sticky lg:top-24">
 <p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#B8862F"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#B8862F"></span><span>HOW TO STUDY</span></p>
-<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.75rem]" style="color:#1B2430">おすすめの学習の進め方</h2>
+<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.35rem]" style="color:#1B2430">おすすめの学習の進め方</h2>
 <p class="mt-5 max-w-sm text-sm leading-[1.9]" style="color:#6A707A">物語として読み、手で書き、反復し、本番形式で仕上げる。</p>
 </div></div>
 <div class="mt-8 min-w-0 lg:col-span-8 lg:mt-1">
@@ -131,7 +131,7 @@
 <section class="my-24 sm:my-32 lg:grid lg:grid-cols-12 lg:gap-16">
 <div class="lg:col-span-4"><div class="lg:sticky lg:top-24">
 <p class="flex items-center gap-3 text-[11px] font-bold tracking-[0.35em]" style="color:#5E7D63"><span aria-hidden="true" class="h-2 w-2 flex-none" style="background:#5E7D63"></span><span>GUIDE</span></p>
-<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.75rem]" style="color:#1B2430">ボックスと演習の見方</h2>
+<h2 class="mt-4 font-serif text-[1.75rem] font-black leading-[1.3] text-balance [word-break:auto-phrase] sm:text-[2.25rem] lg:text-[2.35rem]" style="color:#1B2430">ボックスと演習の見方</h2>
 <p class="mt-5 max-w-sm text-sm leading-[1.9]" style="color:#6A707A">各章は、色分けしたボックスを組み合わせて作られている。色と役割を覚えておくと、復習のときに目的の情報へすぐたどり着ける。押すと、見本つきの説明が開く。</p>
 </div></div>
 <div class="mt-8 min-w-0 lg:col-span-8 lg:mt-1">
@@ -222,7 +222,3 @@
 </div>
 </div>
 </section>
-
-::note
-※物語に登場する企業・人物・数値は、学習用に設計した架空のものです。実在の企業・団体とは関係ありません。「実際にあった話」で紹介する事例と統計は、公開されている報道・統計資料にもとづき、出典を併記しています。スマートフォンでの閲覧に最適化しています。
-::

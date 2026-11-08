@@ -1936,7 +1936,7 @@ sub cover_top {    # 表紙：書名・つかみ・開始ボタンと、学習�
         . qq{<p class="mt-2 text-center text-[11px] text-[#6A707A]">合格まで、責任をもってお預かりします</p>}
         . qq{</div>}
         . qq{<div aria-hidden="true" class="h-[7px] w-full" style="$zig"></div>}
-        . qq{<div aria-hidden="true" class="absolute -right-4 bottom-20 flex h-[5.5rem] w-[5.5rem] rotate-[-14deg] items-center justify-center rounded-full border-2 border-[#C8462E]/80 font-serif text-[13px] font-black leading-tight text-[#C8462E]/85"><span class="text-center">全範囲<br>収録</span></div>}
+        . qq{<div aria-hidden="true" class="absolute -right-5 top-16 flex h-[5.5rem] w-[5.5rem] rotate-[-14deg] items-center justify-center rounded-full border-2 border-[#C8462E]/80 font-serif text-[13px] font-black leading-tight text-[#C8462E]/85"><span class="text-center">全範囲<br>収録</span></div>}
         . '</div>' : '';
 
     my $ruled = 'background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%27160%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.9%27 numOctaves=%272%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 0.11 0 0 0 0 0.14 0 0 0 0 0.19 0 0 0 .07 0%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E"),repeating-linear-gradient(to bottom,transparent 0,transparent 39px,rgba(47,74,109,.08) 39px,rgba(47,74,109,.08) 40px)';
@@ -1947,7 +1947,7 @@ sub cover_top {    # 表紙：書名・つかみ・開始ボタンと、学習�
          . qq{<div class="mt-8 sm:mt-12 lg:mt-14 lg:grid lg:grid-cols-12 lg:items-center lg:gap-10">}
          . qq{<div class="lg:col-span-7">}
          . $hook
-         . qq{<h1 class="mt-6 font-serif text-[3rem] font-black leading-[1.02] tracking-tight sm:mt-8 sm:text-[5rem] lg:text-[7.25rem]">$HERO</h1>}
+         . qq{<h1 class="mt-6 whitespace-nowrap font-serif text-[2.9rem] font-black leading-[1.05] tracking-tight sm:mt-8 sm:text-[5rem] lg:text-[5.4rem] xl:text-[6rem]">$HERO</h1>}
          . qq{<p class="mt-6 max-w-lg text-sm font-bold leading-relaxed text-[#3D4551] text-balance [word-break:auto-phrase] sm:mt-8 sm:text-base">$BOOK_SUB</p>}
          . qq{<div class="mt-9 flex flex-col gap-3 sm:mt-12 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-7">$cont}
          . qq{<a id="cta-start" href="$start" class="group inline-flex w-full items-center justify-between gap-10 bg-[#1B2430] px-7 py-[1.1rem] font-bold tracking-wide text-[#F6F3EC] transition hover:bg-[#C8462E] sm:w-auto">$START<span aria-hidden="true" class="transition group-hover:translate-x-1">→</span></a>}
