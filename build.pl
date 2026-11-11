@@ -7,7 +7,6 @@
 #                              （@title @subtitle @hero @mark @start @key @scope @site。なければ3級の既定値）
 #                              「@site https://…」と書くと、canonical・OGP と sitemap.xml・robots.txt を出力する
 #                              「@hook 一言」：表紙のつかみの一言。「@stats 21件:事件で学ぶ | 164問:仕訳の入力問題 | …」：表紙の学習明細書（レシート）の行
-#                              「@quote 本文（／で改行）// 話し手」：PCの表紙の右側に縦書きで出す引用
 #            _src/index.txt  … 表紙ページの本文
 #            _src/<id>.txt   … 各章の本文（独自マークアップ）
 #  出力:     public/ に index.html / <id>.html / all.html（全章一気読み版）
@@ -1663,12 +1662,51 @@ __SEO__<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
   .kb-blank::placeholder { color: #a5b4fc; font-weight: 700; }
   summary::-webkit-details-marker { display: none; }
   table { font-variant-numeric: tabular-nums; }
+
+  /* ── 表紙まわりの動きと質感 ── */
+  /* 出現の動きは translate で行う（transform を使うと、傾けた部品の rotate を打ち消してしまう） */
+  @keyframes fade-up { from { opacity: 0; translate: 0 1.5rem; } to { opacity: 1; translate: 0 0; } }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes ink-spread { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  [data-anim] { opacity: 0; }
+  [data-anim].anim-on { opacity: 1; animation: fade-up .9s cubic-bezier(.22,1,.36,1) both; }
+
+  /* にじんだ朱の円（表紙の背景） */
+  .hero-ink-circle {
+    position: absolute; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, rgba(200,70,46,.07) 0%, transparent 70%);
+    animation: ink-spread 1.6s cubic-bezier(.22,1,.36,1) both;
+  }
+
+  /* 紺の地にのせる、紙のざらつき */
+  .grain-overlay::before {
+    content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .5;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* フッターの和紋様 */
+  .footer-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 20a20 20 0 0 1 20-20 20 20 0 0 1 20 20 20 20 0 0 1-20 20 20 20 0 0 1-20-20' fill='none' stroke='%23F6F3EC' stroke-width='.3' opacity='.06'/%3E%3C/svg%3E");
+  }
+
+  #progress { background: linear-gradient(90deg, #C8462E, #B8862F) !important; }
+  ::selection { background: rgba(200,70,46,.2); }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    [data-anim] { opacity: 1 !important; animation: none !important; }
+    .hero-ink-circle { animation: none; }
+  }
+
+
   @media print {
     .no-print { display: none !important; }
     body { background: #fff !important; }
     section, aside, figure, details { break-inside: avoid; }
+    [data-anim] { opacity: 1 !important; animation: none !important; }
   }
 </style>
+<noscript><style>[data-anim] { opacity: 1 !important; }</style></noscript>
 </head>
 HTML
     my ($t, $d) = (esc($title), esc($desc));
@@ -1696,9 +1734,9 @@ sub site_header {
     my ($cur, $mode) = @_;
     my $label = ($cur && $META{$cur}) ? esc($META{$cur}{num}) : '';
     my $home  = $mode eq 'all' ? '#top' : 'index.html';
-    return qq{<header class="no-print sticky top-0 z-40 border-b border-[#1B2430]/10 bg-[#F6F3EC]/90 backdrop-blur">}
+    return qq{<header class="no-print sticky top-0 z-40 border-b border-[#1B2430]/8 bg-[#F6F3EC]/85 backdrop-blur-xl backdrop-saturate-150">}
          . qq{<div class="mx-auto flex h-14 } . ($CTX{wide} ? 'max-w-6xl lg:px-8' : 'max-w-3xl') . qq{ items-center justify-between gap-3 px-4 sm:px-6">}
-         . qq{<a href="$home" class="flex min-w-0 items-center gap-2"><span class="flex h-7 w-7 flex-none items-center justify-center bg-[#1B2430] font-serif text-sm font-black text-[#F6F3EC]">$MARK</span><span class="truncate text-sm font-black text-gray-900 sm:text-base">$BOOK</span></a>}
+         . qq{<a href="$home" class="group flex min-w-0 items-center gap-2.5 transition-opacity hover:opacity-75"><span class="flex h-8 w-8 flex-none items-center justify-center bg-[#1B2430] font-serif text-sm font-black text-[#F6F3EC] shadow-sm transition-transform group-hover:scale-105">$MARK</span><span class="truncate text-sm font-black tracking-tight text-gray-900 sm:text-base">$BOOK</span></a>}
          . qq{<div class="flex flex-none items-center gap-2">}
          . ($label ? qq{<span class="hidden text-xs font-bold text-gray-400 sm:inline">$label</span>} : '')
          . qq{<details data-dropdown class="relative"><summary class="flex cursor-pointer select-none items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-bold text-gray-700 hover:bg-gray-50">目次<span class="text-[10px] text-gray-400">▼</span></summary>}
@@ -1713,12 +1751,28 @@ sub site_header {
 sub footer_html {
     my $w = $CTX{wide} ? 'max-w-6xl lg:px-8' : 'max-w-3xl';
     (my $h = <<"HTML") =~ s/__FOOTW__/$w/;
-<footer class="mt-20 bg-[#1B2430]">
-  <div class="mx-auto __FOOTW__ space-y-2 px-4 py-12 text-xs leading-relaxed text-[#F6F3EC]/60 sm:px-6">
-    <p class="font-serif text-base font-black text-[#F6F3EC]">$BOOK</p>
-    <p class="font-bold text-[#F6F3EC]/80">$BOOK_SUB</p>
-    <p>物語に登場する企業・人物・数値は、学習のために設計した架空のものです。実在の企業・団体・商品とは関係ありません。「実際にあった話」で紹介する事例と統計は、公開されている報道・統計資料にもとづき、出典を併記しています。</p>
-    <p>$SCOPE</p>
+<footer class="footer-pattern relative mt-28 border-t border-[#1B2430]/20 bg-[#1B2430]">
+  <div class="mx-auto __FOOTW__ px-4 py-16 sm:px-6">
+    <div class="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+      <div class="space-y-3">
+        <div class="flex items-center gap-3">
+          <span class="flex h-8 w-8 flex-none items-center justify-center bg-[#C8462E] font-serif text-sm font-black text-white shadow-sm">$MARK</span>
+          <p class="font-serif text-lg font-black tracking-wide text-[#F6F3EC]">$BOOK</p>
+        </div>
+        <p class="text-sm font-medium text-[#F6F3EC]/80">$BOOK_SUB</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-6 text-xs font-bold text-[#F6F3EC]/70">
+        <a href="#top" class="transition hover:text-white">↑ ページ先頭へ</a>
+        <a href="index.html#guide" class="transition hover:text-white">使い方ガイド</a>
+        <a href="all.html" class="transition hover:text-white">全章一気読み版</a>
+        <a href="apx-a.html" class="transition hover:text-white">付録A 勘定科目辞典</a>
+      </div>
+    </div>
+    <div class="mt-12 border-t border-white/10 pt-8 space-y-3 text-xs leading-relaxed text-[#F6F3EC]/50">
+      <p>物語に登場する企業・人物・数値は、学習のために設計した架空のものです。実在の企業・団体・商品とは関係ありません。「実際にあった話」で紹介する事例と統計は、公開されている報道・統計資料にもとづき、出典を併記しています。</p>
+      <p>$SCOPE</p>
+      <p class="pt-4 text-center font-mono text-[11px] text-[#F6F3EC]/40">© $BOOK All rights reserved.</p>
+    </div>
   </div>
 </footer>
 HTML
@@ -1729,6 +1783,21 @@ sub script_html {    # 進捗バー・目次・「続きから」＋ 演習な�
     return (<<'HTML' =~ s/'kb3-/'$KEY-/gr) . "<script>\n$KBJS</script>\n";
 <script>
 (() => {
+  // スクロール連動アニメーション (IntersectionObserver)
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('anim-on');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('[data-anim]').forEach((el) => observer.observe(el));
+  } else {
+    document.querySelectorAll('[data-anim]').forEach((el) => el.classList.add('anim-on'));
+  }
+
   const bar = document.getElementById('progress');
   const update = () => {
     const d = document.documentElement;
@@ -1924,9 +1993,9 @@ sub cover_top {    # 表紙：書名・つかみ・開始ボタンと、学習�
     } @stats;
     my $zig = 'background:linear-gradient(-45deg,transparent 7px,#fff 0) 0 0/14px 14px repeat-x,linear-gradient(45deg,transparent 7px,#fff 0) 0 0/14px 14px repeat-x';
     my $bar = 'background:repeating-linear-gradient(90deg,#1B2430 0 2px,transparent 2px 4px,#1B2430 4px 5px,transparent 5px 8px,#1B2430 8px 11px,transparent 11px 13px)';
-    my $receipt = @stats ? qq{<div class="relative mx-auto mt-14 w-full max-w-[22rem] rotate-[1.5deg] lg:mt-0">}
+    my $receipt = @stats ? qq{<div data-anim class="relative mx-auto mt-16 w-full max-w-[22rem] rotate-[1.5deg] transition-transform duration-500 hover:rotate-0 lg:mt-0" style="animation-delay:.5s">}
         . qq{<span aria-hidden="true" class="absolute -top-3 left-1/2 z-10 h-7 w-28 -translate-x-1/2 -rotate-3 bg-[#B8862F]/35"></span>}
-        . qq{<div class="bg-white px-6 pb-6 pt-8 font-mono text-[13px] text-[#1B2430] ring-1 ring-[#1B2430]/10">}
+        . qq{<div class="bg-white px-6 pb-6 pt-8 font-mono text-[13px] text-[#1B2430] shadow-2xl shadow-[#1B2430]/10 ring-1 ring-[#1B2430]/10">}
         . qq{<p class="text-center font-sans text-[10px] font-bold tracking-[0.3em] text-[#6A707A]">KAMOGAWA ACCOUNTING OFFICE</p>}
         . qq{<p class="mt-2 text-center font-serif text-xl font-black tracking-[0.2em]">学習明細書</p>}
         . qq{<p class="mt-1 text-center text-[11px] text-[#6A707A]">日商簿記3級 ― 全21章・付録4本</p>}
@@ -1939,18 +2008,20 @@ sub cover_top {    # 表紙：書名・つかみ・開始ボタンと、学習�
         . qq{<div aria-hidden="true" class="absolute -left-3 bottom-10 flex h-[5.5rem] w-[5.5rem] rotate-[-14deg] sm:-left-7 items-center justify-center rounded-full border-2 border-[#C8462E]/80 font-serif text-[13px] font-black leading-tight text-[#C8462E]/85"><span class="text-center">全範囲<br>収録</span></div>}
         . '</div>' : '';
 
-    my $ruled = 'background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%27160%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.9%27 numOctaves=%272%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 0.11 0 0 0 0 0.14 0 0 0 0 0.19 0 0 0 .07 0%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E"),repeating-linear-gradient(to bottom,transparent 0,transparent 39px,rgba(47,74,109,.08) 39px,rgba(47,74,109,.08) 40px)';
+    my $ruled = 'background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%27160%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.9%27 numOctaves=%272%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 0.11 0 0 0 0 0.14 0 0 0 0 0.19 0 0 0 .05 0%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E"),repeating-linear-gradient(to bottom,transparent 0,transparent 39px,rgba(47,74,109,.06) 39px,rgba(47,74,109,.06) 40px)';
     return qq{<section class="relative overflow-hidden border-b border-[#1B2430]/10 bg-[#F6F3EC] text-[#1B2430]" style='$ruled'>}
-         . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-y-0 left-2 flex gap-[3px] sm:left-8 lg:left-[calc(50%-37rem)]"><span class="w-px bg-[#C8462E]/40"></span><span class="w-px bg-[#C8462E]/40"></span></div>}
-         . qq{<div class="relative mx-auto flex max-w-3xl flex-col px-6 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-14 lg:min-h-[calc(100vh-3.5rem)] lg:max-w-6xl lg:justify-center lg:py-16">}
-         . qq{<p class="flex items-center gap-3 text-[10px] font-bold tracking-[0.35em] text-[#6A707A] sm:text-[11px]"><span>CASE BOOK</span><span class="h-px flex-1 bg-[#1B2430]/20"></span><span>日商簿記 3級</span></p>}
+         . qq{<div aria-hidden="true" class="hero-ink-circle" style="width:35vw;height:35vw;right:-8vw;top:-5vw;animation-delay:.3s"></div>}
+         . qq{<div aria-hidden="true" class="hero-ink-circle" style="width:25vw;height:25vw;left:-5vw;bottom:-8vw;background:radial-gradient(circle,rgba(62,124,122,.05) 0%,transparent 70%);animation-delay:.6s"></div>}
+         . qq{<div aria-hidden="true" class="pointer-events-none absolute inset-y-0 left-2 flex gap-[3px] sm:left-8 lg:left-[calc(50%-37rem)]"><span class="w-px bg-[#C8462E]/30"></span><span class="w-px bg-[#C8462E]/30"></span></div>}
+         . qq{<div class="relative z-10 mx-auto flex max-w-3xl flex-col px-6 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-14 lg:min-h-[calc(100vh-3.5rem)] lg:max-w-6xl lg:justify-center lg:py-16">}
+         . qq{<p data-anim class="flex items-center gap-3 text-[10px] font-bold tracking-[0.4em] text-[#6A707A] sm:text-[11px]" style="animation-delay:.1s"><span class="inline-block h-1.5 w-6 bg-[#C8462E]/60"></span><span>CASE BOOK</span><span class="h-px flex-1 bg-[#1B2430]/15"></span><span>日商簿記 3級</span><span class="inline-block h-1.5 w-6 bg-[#3E7C7A]/60"></span></p>}
          . qq{<div class="mt-8 sm:mt-12 lg:mt-14 lg:grid lg:grid-cols-12 lg:items-center lg:gap-10">}
          . qq{<div class="lg:col-span-7">}
-         . $hook
-         . qq{<h1 class="mt-6 whitespace-nowrap font-serif text-[2.9rem] font-black leading-[1.05] tracking-tight sm:mt-8 sm:text-[5rem] lg:text-[5.4rem] xl:text-[6rem]">$HERO</h1>}
-         . qq{<p class="mt-6 max-w-lg text-sm font-bold leading-relaxed text-[#3D4551] text-balance [word-break:auto-phrase] sm:mt-8 sm:text-base">$BOOK_SUB</p>}
-         . qq{<div class="mt-9 flex flex-col gap-3 sm:mt-12 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-7">$cont}
-         . qq{<a id="cta-start" href="$start" class="group inline-flex w-full items-center justify-between gap-10 bg-[#1B2430] px-7 py-[1.1rem] font-bold tracking-wide text-[#F6F3EC] transition hover:bg-[#C8462E] sm:w-auto">$START<span aria-hidden="true" class="transition group-hover:translate-x-1">→</span></a>}
+         . ($hook ? qq{<div data-anim style="animation-delay:.2s">$hook</div>} : '')
+         . qq{<h1 data-anim class="mt-6 font-serif text-[2.9rem] font-black leading-[1.05] tracking-tight sm:mt-8 sm:text-[5rem] lg:text-[5.4rem] xl:text-[6rem]" style="animation-delay:.35s"><span class="inline-block">ケースで学ぶ</span><br><span class="inline-block bg-[linear-gradient(transparent_70%,rgba(200,70,46,.22)_70%,rgba(200,70,46,.22)_92%,transparent_92%)]">簿記3級</span></h1>}
+         . qq{<p data-anim class="mt-6 max-w-lg text-sm font-bold leading-relaxed text-[#3D4551] text-balance [word-break:auto-phrase] sm:mt-8 sm:text-base" style="animation-delay:.5s">$BOOK_SUB</p>}
+         . qq{<div data-anim class="mt-9 flex flex-col gap-3 sm:mt-12 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-7" style="animation-delay:.65s">$cont}
+         . qq{<a id="cta-start" href="$start" class="group inline-flex w-full items-center justify-between gap-10 bg-[#1B2430] px-7 py-[1.1rem] font-bold tracking-wide text-[#F6F3EC] transition-colors duration-300 hover:bg-[#C8462E] sm:w-auto">$START<span aria-hidden="true" class="transition group-hover:translate-x-1">→</span></a>}
          . qq{<a href="#guide" class="self-start bg-gradient-to-r from-[#C8462E] to-[#C8462E] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-1 text-sm font-bold text-[#1B2430] transition-[background-size,color] duration-300 hover:bg-[length:100%_1px] hover:text-[#C8462E] sm:self-auto">このサイトの使い方 ↓</a></div>}
          . qq{</div>}
          . qq{<div class="lg:col-span-5">$receipt</div>}
