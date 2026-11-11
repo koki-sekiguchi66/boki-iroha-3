@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<meta name="theme-color" content="#111827">
+<meta name="theme-color" content="#1B2430">
 <title>ケースで学ぶ簿記3級 ― 身近な会社の数字で、日商簿記3級の全範囲を学ぶ</title>
 <meta name="description" content="父の店の黒字倒産をきっかけに会計事務所に入った新人・大川ひよりが、5つの顧問先で起きる21の事件を簿記で解いていく。その物語を追いながら、日商簿記3級の全範囲を学ぶ教科書。全21章と付録4本。">
 <link rel="canonical" href="https://boki-iroha-3.pages.dev/">
@@ -24,6 +24,12 @@
   tailwind.config = {
     theme: {
       extend: {
+        colors: {
+          gray: { 50: '#F6F3EC', 100: '#EFEBE2', 200: '#E3DED3', 300: '#CCC7BC', 400: '#989CA3', 500: '#6A707A', 600: '#545C68', 700: '#3D4551', 800: '#2A3340', 900: '#1B2430', 950: '#121922' },
+          amber: { 50: '#FAF4E4', 100: '#F3E6C4', 200: '#E8D29A', 300: '#DDBB66', 400: '#D9A441', 500: '#A87724', 600: '#946A20', 700: '#7A571A', 800: '#5F4414', 900: '#47330F', 950: '#2E2109' },
+          shu: '#C8462E',
+        },
+        borderRadius: { sm: '1px', DEFAULT: '2px', md: '2px', lg: '2px', xl: '3px', '2xl': '4px' },
         fontFamily: {
           sans: ['"Noto Sans JP"', '"Hiragino Kaku Gothic ProN"', '"Hiragino Sans"', 'Meiryo', 'sans-serif'],
           serif: ['"Noto Serif JP"', '"Hiragino Mincho ProN"', '"Yu Mincho"', 'serif'],
@@ -231,7 +237,7 @@
 <li class="flex items-center gap-2.5 bg-[#F6F3EC] px-3 py-3"><span aria-hidden="true" class="flex h-3 w-3 flex-none items-center justify-center bg-[#C8462E] text-[7px] text-white">T</span>演習（TRY）</li>
 </ul>
 <details class="group -mt-px border border-[#1B2430]/20 bg-white/60 transition-colors open:bg-white hover:bg-white"><summary class="flex cursor-pointer select-none items-center justify-between gap-3 px-5 py-5 font-serif font-black text-[#1B2430] sm:px-6"><span>7種類のボックスの見本を開く</span><span aria-hidden="true" class="flex h-7 w-7 flex-none items-center justify-center border border-[#1B2430]/30 text-base leading-none transition group-open:border-[#C8462E] group-open:text-[#C8462E]"><span class="block transition-transform group-open:rotate-45">＋</span></span></summary><div class="border-t border-[#1B2430]/15 bg-white px-4 pb-2 sm:px-5">
-<section class="relative my-10 overflow-hidden bg-gray-900 text-white p-6 rounded-lg shadow-lg sm:p-8"><div aria-hidden="true" class="pointer-events-none absolute -right-3 -top-10 select-none font-serif text-[10rem] font-black leading-none text-white/5">?</div><p class="relative mb-4 flex items-center gap-2 text-[11px] font-bold tracking-[0.3em] text-amber-400"><span class="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400"></span>QUESTION ― この章の問い</p><h2 class="relative mb-5 font-serif text-xl font-black leading-snug text-white sm:text-2xl">各章は「問い」から始まる</h2><div class="relative"><div class="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0"><p class="my-5 leading-[1.95]">身近な会社で起こる、直感に反する出来事。その理由を考えることが、各章の入り口になる。答えは、章の後半の「答え合わせ」で明かされる。</p>
+<p class="mb-0 mt-12 inline-flex items-center gap-2.5 bg-gray-900 px-4 py-2 text-[11px] font-bold tracking-[0.3em] text-gray-50"><span aria-hidden="true" class="h-1.5 w-1.5 animate-pulse rounded-full bg-shu"></span>QUESTION ― この章の問い</p><section class="grain-overlay relative mb-10 overflow-hidden bg-gray-900 p-6 text-white sm:p-9"><span aria-hidden="true" class="absolute right-4 top-4 z-10 rotate-[8deg] border-[3px] border-double border-[#E0664E] px-2.5 py-0.5 font-serif text-xs font-black tracking-[0.35em] text-[#E0664E] sm:right-6 sm:top-6 sm:text-sm">未解決</span><div aria-hidden="true" class="pointer-events-none absolute -right-3 -top-10 select-none font-serif text-[10rem] font-black leading-none text-white/5">?</div><h2 class="relative z-10 mb-5 pr-20 font-serif text-xl font-black leading-snug text-white [word-break:auto-phrase] sm:pr-24 sm:text-[1.7rem]">各章は「問い」から始まる</h2><div class="relative z-10"><div class="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0"><p class="my-5 leading-[1.95]">身近な会社で起こる、直感に反する出来事。その理由を考えることが、各章の入り口になる。答えは、章の後半の「答え合わせ」で明かされる。</p>
 </div></div></section>
 <aside class="my-8 rounded-r-lg border-l-4 border-blue-500 bg-blue-50 p-5 sm:p-6"><p class="mb-1 text-[11px] font-bold tracking-[0.25em] text-blue-600">ACCOUNTING THEORY ― 重要理論</p><p class="mb-3 text-lg font-bold leading-snug text-blue-950">重要理論は青いボックスに</p><div class="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0"><p class="my-5 leading-[1.95]">簿記のルールの「なぜ」を説明する、最も大切な理論。2級・1級でもそのまま使う知識なので、ここだけは必ず理解してから先へ進もう。</p>
 </div></aside>
