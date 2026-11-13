@@ -562,7 +562,7 @@ sub r_box {
              . qq{<div class="text-[15px] [&_p]:my-2 [&_p]:leading-[1.85] [&_ul]:my-2">} . inner($k, $name) . '</div></aside>';
     }
     if ($name eq 'answer' && $parent eq 'example') {    # 例題：解答と解説は最初から開いておく
-        my $lab = $a ne '' ? inl($a) : '解答・解説';
+        my $lab = $a ne '' ? inl($a) : 'こう処理する';
         return qq{<div class="px-4 py-5 sm:px-6 sm:py-6"><p class="mb-4 flex items-center gap-3"><span class="flex-none bg-shu px-2.5 py-1 font-serif text-xs font-black tracking-[0.2em] text-white">$lab</span><span aria-hidden="true" class="h-px flex-1 bg-shu/30"></span></p>}
              . inner($k, $name) . '</div>';
     }
@@ -617,8 +617,8 @@ sub r_box {
         local $CTX{reveal} = 1;
         local $CTX{fill}   = { reveal => 1 };
         return qq{<section class="my-10 border border-gray-900/70 bg-white shadow-[5px_5px_0_0_rgba(27,36,48,.08)]">}
-             . qq{<p class="flex items-stretch border-b border-gray-900/70"><span class="flex flex-none items-center bg-gray-900 px-3.5 font-serif text-sm font-black tracking-[0.2em] text-white">例題</span><span class="min-w-0 px-4 py-3 font-bold leading-snug text-gray-900">} . inl($a) . '</span></p>'
-             . qq{<div class="border-b border-dashed border-gray-900/30 bg-gray-50/80 px-4 py-4 sm:px-6 sm:py-5"><p class="mb-2 text-[10px] font-bold tracking-[0.25em] text-gray-500">CASE<span aria-hidden="true" class="mx-2 inline-block h-px w-4 bg-gray-400 align-middle"></span><span class="text-[11px] tracking-[0.15em]">設例</span></p>}
+             . qq{<p class="flex items-stretch border-b border-gray-900/70"><span class="flex flex-none items-center bg-gray-900 px-3.5 font-serif text-sm font-black tracking-[0.2em] text-white">ケース</span><span class="min-w-0 px-4 py-3 font-bold leading-snug text-gray-900">} . inl($a) . '</span></p>'
+             . qq{<div class="border-b border-dashed border-gray-900/30 bg-gray-50/80 px-4 py-4 sm:px-6 sm:py-5"><p class="mb-2 text-[11px] font-bold tracking-[0.2em] text-gray-500">状況</p>}
              . inner(\@pre, $name) . '</div>'
              . rn(\@rest, $name) . '</section>';
 
