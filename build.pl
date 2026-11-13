@@ -416,28 +416,63 @@ sub r_ul {
     return $html;
 }
 
+# ---------------------------------------------------------------- 物語の会話（吹き出し）
+#   原稿の「名前：「せりふ」」は、名前と頭文字の札がついた吹き出しになる。主人公（ひより）は右側に置く。
+#   「…」と佐伯は言った。／佐伯は首を振った。「…」のように地の文と混ざった行も、話し手が登場人物だと
+#   分かる形のときは、地の文と吹き出しに分ける。
+my @CAST   = qw(ひより 一ノ瀬 鴨川 所長 佐伯 坂口 岩井 三好 三國 柏木 森下 村井 中西 北村 大森 島田 谷口 岡崎 浅井 松尾 真壁 西條 早瀬 鳥羽 富岡 片山 小野 木島 父 担当者 投資家 課長 店長 社長);
+my $CASTRE = join '|', map { quotemeta } sort { length($b) <=> length($a) } @CAST;
+my %SAYCOL = ('ひより' => '#C8462E', '一ノ瀬' => '#2F4A6D', '佐伯' => '#3E7C7A', '鴨川' => '#6D4C6A', '所長' => '#6D4C6A', '柏木' => '#5E7D63', '中西' => '#8A5A44', '父' => '#B8862F');
+my @SAYPAL = ('#2F4A6D', '#3E7C7A', '#6D4C6A', '#5E7D63', '#8A5A44', '#946A20', '#545C68');
+my $PLAINV = qr/(?:言った|言う|聞いた|聞き返した|尋ねた|たずねた|答えた|続けた|つぶやいた|切り出した|口を開いた)/;
+
+sub say_html {
+    my ($who, $say) = @_;
+    my $col = $SAYCOL{$who} // $SAYPAL[ hval($who, 7) % @SAYPAL ];
+    my $me  = $who eq 'ひより';
+    my $bub = $DARK ? 'border-white/45 bg-white/10 text-white' : 'border-gray-900/70 bg-white text-gray-900 shadow-[3px_3px_0_0_rgba(27,36,48,.12)]';
+    my $nmc = $DARK ? 'text-white/80' : 'text-gray-600';
+    my $ini = esc(substr($who, 0, 1));
+    return '<div class="my-3.5 flex items-start gap-2.5 font-sans' . ($me ? ' flex-row-reverse' : '') . '">'
+         . qq{<span aria-hidden="true" class="mt-4 flex h-9 w-9 flex-none items-center justify-center rounded-full font-serif text-sm font-black text-white ring-2 ring-white/70" style="background:$col">$ini</span>}
+         . '<div class="flex min-w-0 max-w-[84%] flex-col' . ($me ? ' items-end' : ' items-start') . '">'
+         . qq{<span class="mb-0.5 px-1 text-[11px] font-bold leading-none $nmc">} . esc($who) . '</span>'
+         . termify(qq{<p class="w-fit rounded-[16px] } . ($me ? 'rounded-tr-[3px]' : 'rounded-tl-[3px]') . qq{ border $bub px-4 py-2.5 text-[15px] font-bold leading-[1.75] sm:text-base">} . inl($say) . '</p>')
+         . "</div></div>\n";
+}
+
+sub story_split {
+    my $t = shift;
+    my $Q = qr/「((?:(?!」|「).)+)」/;    # かぎ括弧の中に別のかぎ括弧がない、ひと続きのせりふ
+    return (['say', $1, $2]) if $t =~ /^([^「」：\s]{1,8})：「(.+)」$/;
+    # 「…」と佐伯は言った。（「…」が続くこともある）
+    if ($t =~ /^$Q(?:と、?|。と、?)($CASTRE)(?:は|が|も)([^「」]*?。)(?:$Q)?$/) {
+        my ($q1, $who, $rest, $q2) = ($1, $2, $3, $4);
+        my @p = (['say', $who, $q1]);
+        push @p, ['p', "$who\は$rest"] unless $rest =~ /^、?(?:そう)?$PLAINV。$/;
+        push @p, ['say', $who, $q2] if defined $q2;
+        return @p;
+    }
+    # 佐伯は首を振った。「…」
+    if ($t =~ /^([^「」]*。)$Q$/) {
+        my ($narr, $q) = ($1, $2);
+        my ($last) = $narr =~ /([^。]*。)$/;    # せりふの直前の一文に「〜は」と書かれた人物を、話し手とみなす
+        my @who = ($last =~ /から、?[^。]*(?:聞いた|聞かれた|言われた)/) ? () : ($last =~ /($CASTRE)は/g);
+        if (@who) { print STDERR "AUTO $CUR $who[-1] <= ", substr($narr, -28), "
+" if $ENV{KB_DEBUG}; return (['p', $narr], ['say', $who[-1], $q]); }
+    }
+    return ();
+}
+
 sub rn {
     my ($nodes, $parent) = @_;
     $parent //= '';
     my $h = '';
     for my $n (@$nodes) {
         my $t = $n->{t};
-        if ($t eq 'p' && $n->{text} =~ /^([^「」：\s]{1,8})：「(.+)」$/) {
-            # 物語のせりふ「名前：「…」」は、名前と顔の札がついた吹き出しにする。主人公（ひより）は右側に置く
-            my ($who, $say) = ($1, $2);
-            my %COL = ('ひより' => '#C8462E', '一ノ瀬' => '#2F4A6D', '佐伯' => '#3E7C7A', '鴨川' => '#6D4C6A', '柏木' => '#5E7D63', '中西' => '#8A5A44', '父' => '#B8862F');
-            my @PAL = ('#2F4A6D', '#3E7C7A', '#6D4C6A', '#5E7D63', '#8A5A44', '#946A20', '#545C68');
-            my $col = $COL{$who} // $PAL[ hval($who, 7) % @PAL ];
-            my $me  = $who eq 'ひより';
-            my $bub = $DARK ? 'border-white/45 bg-white/10 text-white' : 'border-gray-900/70 bg-white text-gray-900 shadow-[3px_3px_0_0_rgba(27,36,48,.12)]';
-            my $nmc = $DARK ? 'text-white/80' : 'text-gray-600';
-            my $ini = esc(substr($who, 0, 1));
-            $h .= '<div class="my-3.5 flex items-start gap-2.5 font-sans' . ($me ? ' flex-row-reverse' : '') . '">'
-                . qq{<span aria-hidden="true" class="mt-4 flex h-9 w-9 flex-none items-center justify-center rounded-full font-serif text-sm font-black text-white ring-2 ring-white/70" style="background:$col">$ini</span>}
-                . '<div class="flex min-w-0 max-w-[84%] flex-col' . ($me ? ' items-end' : ' items-start') . '">'
-                . qq{<span class="mb-0.5 px-1 text-[11px] font-bold leading-none $nmc">} . esc($who) . '</span>'
-                . termify(qq{<p class="w-fit rounded-[16px] } . ($me ? 'rounded-tr-[3px]' : 'rounded-tl-[3px]') . qq{ border $bub px-4 py-2.5 text-[15px] font-bold leading-[1.75] sm:text-base">} . inl($say) . '</p>')
-                . "</div></div>\n";
+        if ($t eq 'p' && $parent =~ /^(?:|mystery|scene|solve|cfo|answer|choice)$/ and my @parts = story_split($n->{text})) {
+            # 物語の会話は、名前つきの吹き出しにする（地の文と混ざった行は、地の文と吹き出しに分ける）
+            $h .= ($_->[0] eq 'say' ? say_html($_->[1], $_->[2]) : termify('<p class="my-5 leading-[1.95]">' . inl($_->[1]) . '</p>') . "\n") for @parts;
             next;
         }
         if    ($t eq 'p')     { $h .= termify('<p class="my-5 leading-[1.95]">' . inl($n->{text}) . '</p>'); }
