@@ -422,6 +422,12 @@ sub rn {
     my $h = '';
     for my $n (@$nodes) {
         my $t = $n->{t};
+        if ($t eq 'p' && $parent =~ /^(?:|mystery|scene|solve)$/ && $n->{text} =~ /^「((?:(?!」).)+)」$/) {
+            # 物語のせりふ（かぎ括弧だけの段落）は、吹き出しにする
+            my $c = $DARK ? 'border-white/45 bg-white/10 text-white' : 'border-gray-900/70 bg-white text-gray-900 shadow-[3px_3px_0_0_rgba(27,36,48,.12)]';
+            $h .= termify(qq{<p class="my-3 w-fit max-w-[94%] rounded-[16px] rounded-bl-[3px] border $c px-4 py-2.5 font-sans text-[15px] font-bold leading-[1.75] sm:text-base">} . inl($1) . '</p>') . "\n";
+            next;
+        }
         if    ($t eq 'p')     { $h .= termify('<p class="my-5 leading-[1.95]">' . inl($n->{text}) . '</p>'); }
         elsif ($t eq 'h')     { $h .= r_h($n->{level}, $n->{text}); }
         elsif ($t eq 'hr')    { $h .= '<div role="separator" class="rule-mark"><i></i><i></i><i></i></div>'; }
