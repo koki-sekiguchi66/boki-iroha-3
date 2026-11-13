@@ -597,8 +597,7 @@ sub r_box {
              . qq{<div class="text-[15px] [&_p]:my-2 [&_p]:leading-[1.85] [&_ul]:my-2">} . inner($k, $name) . '</div></aside>';
     }
     if ($name eq 'answer' && $parent eq 'example') {    # 例題：解答と解説は最初から開いておく
-        my $lab = $a ne '' ? inl($a) : 'こう処理する';
-        return qq{<div class="px-4 py-5 sm:px-6 sm:py-6"><p class="mb-4 flex items-center gap-3"><span class="flex-none bg-shu px-2.5 py-1 font-serif text-xs font-black tracking-[0.2em] text-white">$lab</span><span aria-hidden="true" class="h-px flex-1 bg-shu/30"></span></p>}
+        return qq{<div class="px-4 py-5 sm:px-6 sm:py-6">}
              . inner($k, $name) . '</div>';
     }
     if ($name eq 'answer') {
