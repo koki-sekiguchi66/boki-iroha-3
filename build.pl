@@ -523,9 +523,9 @@ sub r_box {
     };
 
     if ($name eq 'mystery') {
-        return qq{<p class="mb-0 mt-12 inline-flex items-center gap-2.5 bg-gray-900 px-4 py-2 text-[11px] font-bold tracking-[0.3em] text-gray-50"><span aria-hidden="true" class="h-1.5 w-1.5 animate-pulse rounded-full bg-shu"></span>QUESTION ― この章の問い</p><section class="grain-overlay relative mb-10 overflow-hidden bg-gray-900 p-6 text-white sm:p-9"><span aria-hidden="true" class="absolute right-4 top-4 z-10 rotate-[8deg] border-[3px] border-double border-[#E0664E] px-2.5 py-0.5 font-serif text-xs font-black tracking-[0.35em] text-[#E0664E] sm:right-6 sm:top-6 sm:text-sm">未解決</span>}
+        return qq{<p class="mb-0 mt-12 inline-flex items-center gap-2.5 bg-gray-900 px-4 py-2 text-[11px] font-bold tracking-[0.3em] text-gray-50"><span aria-hidden="true" class="h-1.5 w-1.5 animate-pulse rounded-full bg-shu"></span>QUESTION ― この章の問い</p><section class="grain-overlay relative mb-10 overflow-hidden bg-gray-900 p-6 text-white sm:p-9">}
              . qq{<div aria-hidden="true" class="pointer-events-none absolute -right-3 -top-10 select-none font-serif text-[10rem] font-black leading-none text-white/5">?</div>}
-             . ($a ne '' ? '<h2 class="relative z-10 mb-5 pr-20 font-serif text-xl font-black leading-snug text-white [word-break:auto-phrase] sm:pr-24 sm:text-[1.7rem]">' . inl($a) . '</h2>' : '')
+             . ($a ne '' ? '<h2 class="relative z-10 mb-5 font-serif text-xl font-black leading-snug text-white [word-break:auto-phrase] sm:text-[1.7rem]">' . inl($a) . '</h2>' : '')
              . '<div class="relative z-10">' . inner($k, $name) . '</div></section>';
     }
     if ($name eq 'theory') {    # 定理カード：藍の帯の見出し、薄藍の題字欄、ずらした影
@@ -611,7 +611,7 @@ sub r_box {
     if ($name eq 'exam') {    # 受験票：左に切り取り線つきの半券
         return qq{<aside class="relative my-10 flex border border-emerald-700/45 bg-emerald-50">}
              . qq{<p class="flex w-10 flex-none items-center justify-center border-r-2 border-dashed border-emerald-50 bg-emerald-700 py-4 text-[11px] font-black tracking-[0.3em] text-white [writing-mode:vertical-rl] sm:w-11">試験の急所</p>}
-             . qq{<div class="relative min-w-0 flex-1 p-4 sm:p-6">} . ($a ne '' ? stamp('出る', 'border-emerald-600 text-emerald-700') : '')
+             . qq{<div class="relative min-w-0 flex-1 p-4 sm:p-6">} . ('')
              . label('text-emerald-700', 'EXAM HACK')
              . $title->('mb-3 mt-1 pr-14 font-serif text-lg font-black leading-snug text-emerald-950 [word-break:auto-phrase] sm:text-xl')
              . inner($k, $name) . '</div></aside>';
