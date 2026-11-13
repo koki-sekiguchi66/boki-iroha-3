@@ -548,8 +548,8 @@ sub r_box {
             my ($attrs, $cls) = @_;
             return qq{<section$attrs class="${cls}my-10 border-2 border-gray-900 bg-amber-50">}
                  . qq{<div class="flex items-stretch border-b-2 border-gray-900 bg-white">}
-                 . qq{<p class="flex flex-none flex-col justify-center border-r-2 border-gray-900 bg-amber-400 px-3 py-2 text-gray-900"><span class="text-[9px] font-bold tracking-[0.25em]">THINK</span><span class="font-serif text-sm font-black tracking-[0.1em]">稟議書</span></p>}
-                 . qq{<div class="min-w-0 flex-1 px-3 py-2 sm:px-4"><p class="text-[10px] font-bold tracking-[0.2em] text-gray-500">件名<span aria-hidden="true" class="mx-2 inline-block h-px w-4 bg-gray-400 align-middle"></span>判断してみよう</p>}
+                 . qq{<p class="flex flex-none flex-col justify-center border-r-2 border-gray-900 bg-amber-400 px-3 py-2 text-gray-900"><span class="text-[9px] font-bold tracking-[0.25em]">THINK</span><span class="font-serif text-sm font-black tracking-[0.1em]">考える</span></p>}
+                 . qq{<div class="min-w-0 flex-1 px-3 py-2 sm:px-4"><p class="text-[10px] font-bold tracking-[0.2em] text-gray-500">件名<span aria-hidden="true" class="mx-2 inline-block h-px w-4 bg-gray-400 align-middle"></span>考えてみよう</p>}
                  . $title->('mt-0.5 font-serif text-base font-black leading-snug text-gray-900 [word-break:auto-phrase] sm:text-lg') . '</div>'
                  . qq{<div aria-hidden="true" class="flex w-14 flex-none flex-col border-l-2 border-gray-900 text-center"><span class="border-b border-gray-900/40 text-[9px] font-bold leading-5 text-gray-600">決裁</span><span class="flex flex-1 items-center justify-center py-1.5"><span class="flex h-8 w-8 rotate-[-12deg] items-center justify-center rounded-full border-2 border-dashed border-shu/60 font-serif text-xs font-black text-shu/70">？</span></span></div>}
                  . qq{</div><div class="p-4 sm:p-6">};
@@ -573,13 +573,13 @@ sub r_box {
         $NCHK{think}++ if ($CTX{mode} // '') ne 'all';
         return $open->(' data-think', 'kb-think ')
              . inner(\@body, $name)
-             . qq{<p class="mb-2 mt-5 flex items-center gap-3 text-xs font-bold text-gray-700"><span class="flex-none bg-gray-900 px-2 py-1 text-[10px] tracking-[0.2em] text-white">起案</span>あなたの判断は？　1つ選ぶと、その結果と考え方が開く。</p>}
+             . qq{<p class="mb-2 mt-5 flex items-center gap-3 text-xs font-bold text-gray-700"><span class="flex-none bg-gray-900 px-2 py-1 text-[10px] tracking-[0.2em] text-white">選ぶ</span>あなたならどう考える？　1つ選ぶと、その考え方への講評が開く。</p>}
              . qq{<div class="grid gap-2" role="group" aria-label="選択肢">$opts</div>}
              . $fbs . rn(\@ans, 'cfo')
              . '<span class="hidden !border-amber-500 !bg-amber-100 ring-2 ring-amber-400"></span></div></section>';
     }
     if ($name eq 'choice') {    # cfo の外に置かれた choice（書き方の誤り）
-        push @WARN, "[$CUR:$n->{line}] ::choice は ::cfo（判断してみよう）の中でだけ使える";
+        push @WARN, "[$CUR:$n->{line}] ::choice は ::cfo（考えてみよう）の中でだけ使える";
         return inner($k, $name);
     }
     if ($name eq 'real') {
