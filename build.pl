@@ -397,7 +397,7 @@ sub r_ul {
             if ($sub) { $html .= '</ul>'; $sub = 0; }
             $html .= '</li>' if $i > 0;
             if ($check) {
-                $html .= '<li class="flex gap-3 leading-[1.8]"><span class="mt-1 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-emerald-500 text-[11px] font-black text-white">✓</span><span>' . inl($t) . '</span>';
+                $html .= '<li class="flex gap-3 leading-[1.8]"><span aria-hidden="true" class="mt-0.5 flex h-6 w-6 flex-none rotate-[-10deg] items-center justify-center rounded-full border-[1.5px] border-shu font-serif text-[10px] font-black leading-none text-shu">済</span><span>' . inl($t) . '</span>';
             }
             else {
                 $html .= '<li class="leading-[1.85]">' . inl($t);
@@ -444,6 +444,17 @@ sub label {
 }
 
 # ---------------------------------------------------------------- render: boxes
+sub slip_open {    # 見出しタブつきの枠（ホームの「事件ファイル」と同じ形）。閉じるときは slip_close
+    my ($tag, $attrs, $tabbg, $en, $ja, $boxcls, $deco) = @_;
+    return qq{<div class="my-10"><p class="inline-flex items-center gap-2.5 px-3.5 py-1.5 text-[10px] font-bold tracking-[0.25em] text-white $tabbg"><span>$en</span><span aria-hidden="true" class="h-px w-4 bg-white/50"></span><span class="text-[11px] tracking-[0.15em]">$ja</span></p>}
+         . qq{<$tag$attrs class="relative $boxcls p-5 sm:p-7">} . ($deco // '') . '<div class="relative">';
+}
+sub slip_close { my $tag = shift; return "</div></$tag></div>"; }
+sub stamp {    # 右上に押す丸い印
+    my ($txt, $cls) = @_;
+    return qq{<span aria-hidden="true" class="absolute right-4 top-4 flex h-11 w-11 rotate-[-10deg] items-center justify-center rounded-full border-2 font-serif text-[13px] font-black leading-none $cls">$txt</span>};
+}
+
 sub r_box {
     my ($n, $parent) = @_;
     my ($name, $a, $k) = @$n{qw(name arg kids)};
@@ -462,24 +473,25 @@ sub r_box {
              . '<div class="relative z-10">' . inner($k, $name) . '</div></section>';
     }
     if ($name eq 'theory') {
-        return qq{<aside class="my-8 rounded-r-lg border-l-4 border-blue-500 bg-blue-50 p-5 sm:p-6">}
-             . label('text-blue-600', 'ACCOUNTING THEORY ― 重要理論')
-             . $title->('mb-3 text-lg font-bold leading-snug text-blue-950')
-             . inner($k, $name) . '</aside>';
+        return slip_open('aside', '', 'bg-blue-700', 'THEORY', '重要理論', 'border-l-[3px] border-blue-700 bg-blue-50/80',
+                   qq{<span aria-hidden="true" class="pointer-events-none absolute right-4 top-1 select-none font-serif text-[4.5rem] font-black leading-none text-blue-700/10">§</span>})
+             . $title->('mb-3 pr-10 font-serif text-lg font-black leading-snug text-blue-950 sm:text-xl')
+             . inner($k, $name) . slip_close('aside');
+
     }
     if ($name eq 'danger') {
-        return qq{<aside class="my-8 rounded-lg border border-t-4 border-red-200 border-t-red-600 bg-red-50 p-5 sm:p-6">}
-             . label('text-red-700', '⚠ RISK ― 経営の落とし穴')
-             . $title->('mb-3 text-lg font-bold leading-snug text-red-950')
-             . inner($k, $name) . '</aside>';
+        return slip_open('aside', '', 'bg-red-700', 'RISK', '経営の落とし穴', 'border border-t-0 border-red-200 bg-red-50/80 pt-8 sm:pt-10',
+                   qq{<span aria-hidden="true" class="absolute inset-x-0 top-0 h-2" style="background:repeating-linear-gradient(-45deg,#b91c1c 0 8px,#fecaca 8px 16px)"></span>})
+             . $title->('mb-3 font-serif text-lg font-black leading-snug text-red-950 sm:text-xl')
+             . inner($k, $name) . slip_close('aside');
+
     }
     if ($name eq 'cfo') {
         my @ch = grep { $_->{t} eq 'box' && $_->{name} eq 'choice' } @$k;
         if (!@ch) {
-            return qq{<section class="my-8 rounded-lg border-2 border-amber-300 bg-amber-50 p-5 sm:p-6">}
-                 . label('text-amber-700', 'THINK ― 判断してみよう')
-                 . $title->('mb-3 text-lg font-bold leading-snug text-amber-950')
-                 . inner($k, $name) . '</section>';
+            return slip_open('section', '', 'bg-amber-500', 'THINK', '判断してみよう', 'border-2 border-amber-300 bg-amber-50', qq{<span aria-hidden="true" class="absolute right-4 top-4 hidden border border-amber-700/40 bg-white/60 text-[9px] font-bold text-amber-800 sm:block"><span class="block border-b border-amber-700/40 px-2 text-center">決裁</span><span class="flex h-10 w-11 items-center justify-center"><span class="flex h-7 w-7 rotate-[-12deg] items-center justify-center rounded-full border-2 border-dashed border-shu/60 font-serif text-xs font-black text-shu/70">？</span></span></span>})
+                 . $title->('mb-3 font-serif text-lg font-black leading-snug text-amber-950 sm:pr-16 sm:text-xl')
+                 . inner($k, $name) . slip_close('section');
         }
         # 選択式：先に自分の判断を選ぶと、その選択へのフィードバックと解説が開く
         my @body = grep { !($_->{t} eq 'box' && ($_->{name} eq 'choice' || $_->{name} eq 'answer')) } @$k;
@@ -489,49 +501,55 @@ sub r_box {
             my ($key, $txt) = $c->{arg} =~ /^([A-ZＡ-Ｚ])[\.．:：\s]\s*(.*)$/ ? ($1, $2) : ('?', $c->{arg});
             push @WARN, "[$CUR:$c->{line}] choice の先頭に「A.」のような記号がない" if $key eq '?';
             $opts .= qq{<button type="button" class="kb-opt flex w-full items-start gap-3 rounded-lg border-2 border-amber-200 bg-white px-3 py-2.5 text-left hover:border-amber-400" data-k="$key" aria-pressed="false">}
-                   . qq{<span class="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-amber-500 text-xs font-black text-white">$key</span>}
+                   . qq{<span class="flex h-6 w-6 flex-none items-center justify-center bg-gray-900 font-serif text-xs font-black text-white">$key</span>}
                    . '<span class="pt-0.5 text-[15px] font-bold leading-snug text-gray-900">' . inl($txt) . '</span></button>';
             $fbs .= qq{<div class="kb-fb mt-3 rounded-lg border-2 border-amber-400 bg-white p-4 sm:p-5" data-k="$key">}
                   . qq{<p class="mb-2 text-xs font-bold tracking-wider text-amber-700">「$key」を選んだ場合</p>} . inner($c->{kids}, 'choice') . '</div>';
         }
         $NCHK{think}++ if ($CTX{mode} // '') ne 'all';
-        return qq{<section class="kb-think my-8 rounded-lg border-2 border-amber-300 bg-amber-50 p-5 sm:p-6" data-think>}
-             . label('text-amber-700', 'THINK ― 判断してみよう')
-             . $title->('mb-3 text-lg font-bold leading-snug text-amber-950')
+        return slip_open('section', ' data-think', 'bg-amber-500', 'THINK', '判断してみよう', 'kb-think border-2 border-amber-300 bg-amber-50', qq{<span aria-hidden="true" class="absolute right-4 top-4 hidden border border-amber-700/40 bg-white/60 text-[9px] font-bold text-amber-800 sm:block"><span class="block border-b border-amber-700/40 px-2 text-center">決裁</span><span class="flex h-10 w-11 items-center justify-center"><span class="flex h-7 w-7 rotate-[-12deg] items-center justify-center rounded-full border-2 border-dashed border-shu/60 font-serif text-xs font-black text-shu/70">？</span></span></span>})
+             . $title->('mb-3 font-serif text-lg font-black leading-snug text-amber-950 sm:pr-16 sm:text-xl')
              . inner(\@body, $name)
              . qq{<p class="mb-2 mt-5 text-xs font-bold text-amber-800">あなたの判断は？　1つ選ぶと、その結果と考え方が開く。</p>}
              . qq{<div class="grid gap-2" role="group" aria-label="選択肢">$opts</div>}
              . $fbs . rn(\@ans, 'cfo')
-             . '<span class="hidden !border-amber-500 !bg-amber-100 ring-2 ring-amber-400"></span></section>';
+             . '<span class="hidden !border-amber-500 !bg-amber-100 ring-2 ring-amber-400"></span>' . slip_close('section');
     }
     if ($name eq 'choice') {    # cfo の外に置かれた choice（書き方の誤り）
         push @WARN, "[$CUR:$n->{line}] ::choice は ::cfo（判断してみよう）の中でだけ使える";
         return inner($k, $name);
     }
     if ($name eq 'real') {
-        return qq{<aside class="my-8 rounded-lg border border-t-4 border-stone-300 border-t-stone-700 bg-white p-5 shadow-sm sm:p-6">}
-             . label('text-stone-500', 'REAL CASE ― 実際にあった話')
-             . $title->('mb-3 font-serif text-lg font-black leading-snug text-stone-900')
+        return qq{<aside class="relative my-12 border border-t-[3px] border-stone-300 border-t-stone-900 bg-white p-5 shadow-[5px_5px_0_0_rgba(27,36,48,.07)] sm:p-7">}
+             . qq{<span aria-hidden="true" class="absolute -top-3.5 left-8 h-6 w-24 -rotate-2 bg-[#B8862F]/35"></span>}
+             . qq{<p class="mb-4 flex items-center gap-3 border-b border-stone-900 pb-2 text-[10px] font-bold tracking-[0.25em] text-stone-600"><span>REAL CASE</span><span aria-hidden="true" class="h-px flex-1 bg-stone-300"></span><span class="text-[11px] tracking-[0.15em]">実際にあった話</span></p>}
+             . $title->('mb-3 font-serif text-xl font-black leading-snug text-stone-900 [word-break:auto-phrase] sm:text-[1.4rem]')
              . inner($k, $name) . '</aside>';
+
     }
     if ($name eq 'answer') {
         my $lab = $a ne '' ? $a : ($parent eq 'cfo' ? '考え方の例を見る' : '解答・解説を見る');
-        return qq{<details class="kb-answer group mt-5 rounded-lg border border-gray-300 bg-white text-gray-800 shadow-sm">}
-             . qq{<summary class="flex cursor-pointer select-none items-center justify-between gap-3 rounded-lg px-4 py-3 font-bold text-gray-900 hover:bg-gray-50"><span>} . inl($lab)
-             . qq{</span><span class="flex-none text-xs text-gray-400 transition-transform group-open:rotate-180">▼</span></summary>}
-             . qq{<div class="border-t border-gray-200 px-4 py-4 sm:px-5">} . inner($k, $name) . '</div></details>';
+        return qq{<details class="kb-answer group mt-5 border border-gray-900/25 bg-white text-gray-800">}
+             . qq{<summary class="flex cursor-pointer select-none items-center justify-between gap-3 px-4 py-3.5 font-bold text-gray-900 transition-colors hover:bg-gray-50"><span class="flex items-center gap-3"><span aria-hidden="true" class="h-3.5 w-[3px] flex-none bg-shu"></span><span>} . inl($lab)
+             . qq{</span></span><span aria-hidden="true" class="flex h-6 w-6 flex-none items-center justify-center border border-gray-900/30 text-sm leading-none transition group-open:border-shu group-open:text-shu"><span class="block transition-transform group-open:rotate-45">＋</span></span></summary>}
+             . qq{<div class="border-t border-gray-900/15 px-4 py-4 sm:px-5">} . inner($k, $name) . '</div></details>';
+
     }
     if ($name eq 'exam') {
-        return qq{<aside class="my-8 rounded-lg border border-emerald-200 bg-emerald-50 p-5 sm:p-6">}
-             . label('text-emerald-700', 'EXAM HACK ― 試験の急所')
-             . $title->('mb-3 text-lg font-bold leading-snug text-emerald-950')
-             . inner($k, $name) . '</aside>';
+        return slip_open('aside', '', 'bg-emerald-700', 'EXAM HACK', '試験の急所', 'border border-emerald-200 bg-emerald-50/80',
+                   $a ne '' ? stamp('出る', 'border-emerald-600 text-emerald-700') : '')
+             . $title->('mb-3 pr-14 font-serif text-lg font-black leading-snug text-emerald-950 sm:text-xl')
+             . inner($k, $name) . slip_close('aside');
+
     }
     if ($name eq 'next') {
-        return qq{<aside class="my-8 rounded-lg border border-violet-200 bg-violet-50 p-5 sm:p-6">}
+        return qq{<aside class="my-10 flex border border-violet-200 bg-violet-50/80">}
+             . qq{<span class="flex w-9 flex-none items-center justify-center bg-violet-700 py-4 text-[11px] font-black tracking-[0.3em] text-white [writing-mode:vertical-rl] sm:w-10">次の一歩</span>}
+             . qq{<div class="min-w-0 flex-1 p-5 sm:p-7">}
              . label('text-violet-700', 'NEXT STEP ― 2級・1級・実務へのつながり')
-             . $title->('mb-3 text-lg font-bold leading-snug text-violet-950')
-             . inner($k, $name) . '</aside>';
+             . $title->('mb-3 mt-2 font-serif text-lg font-black leading-snug text-violet-950 sm:text-xl')
+             . inner($k, $name) . '</div></aside>';
+
     }
     if ($name eq 'solve') {
         return qq{<section class="relative my-12 border-2 border-gray-900 bg-white p-6 shadow-[6px_6px_0_0_#1B2430] sm:p-9"><span aria-hidden="true" class="absolute right-4 top-4 rotate-[8deg] border-[3px] border-double border-shu px-2.5 py-0.5 font-serif text-xs font-black tracking-[0.35em] text-shu sm:right-6 sm:top-6 sm:text-sm">解決</span>}
@@ -554,16 +572,18 @@ sub r_box {
     my $pad = (($name eq 'example' || $name eq 'problem')
                && grep { /\[\[/ } node_texts([ grep { $_->{t} eq 'raw' || ($_->{t} eq 'box' && $_->{name} ne 'answer') } @$k ])) ? 'p-3' : 'p-4';
     if ($name eq 'example') {
-        return qq{<section class="my-8 rounded-lg border border-gray-300 bg-white $pad shadow-sm sm:p-6">}
-             . qq{<p class="mb-3 flex flex-wrap items-baseline gap-2"><span class="rounded bg-gray-900 px-2 py-0.5 text-xs font-bold text-white">例題</span><span class="font-bold leading-snug text-gray-900">} . inl($a) . '</span></p>'
-             . with_try($k, $name, $n->{line}) . '</section>';
+        return qq{<section class="my-10 border border-gray-900/25 bg-white">}
+             . qq{<p class="flex items-stretch border-b border-gray-900/15"><span class="flex flex-none items-center bg-gray-900 px-3.5 font-serif text-sm font-black tracking-[0.2em] text-white">例題</span><span class="min-w-0 px-4 py-3 font-bold leading-snug text-gray-900">} . inl($a) . '</span></p>'
+             . qq{<div class="$pad sm:p-6">} . with_try($k, $name, $n->{line}) . '</div></section>';
+
     }
     if ($name eq 'problem') {
         $CTX{qn}++;
         my $no = $CTX{qn};
-        return qq{<section class="rounded-lg border border-gray-300 bg-white $pad shadow-sm sm:p-6">}
-             . qq{<p class="mb-3 flex flex-wrap items-baseline gap-2"><span class="rounded bg-amber-500 px-2 py-0.5 text-xs font-black text-white">問$no</span><span class="font-bold leading-snug text-gray-900">} . inl($a) . '</span></p>'
-             . with_try($k, $name, $n->{line}) . '</section>';
+        return qq{<section class="border border-gray-900/25 bg-white">}
+             . qq{<p class="flex items-stretch border-b border-gray-900/15"><span class="flex flex-none items-center bg-amber-500 px-3.5 font-serif text-sm font-black tracking-[0.1em] text-white">問$no</span><span class="min-w-0 px-4 py-3 font-bold leading-snug text-gray-900">} . inl($a) . '</span></p>'
+             . qq{<div class="$pad sm:p-6">} . with_try($k, $name, $n->{line}) . '</div></section>';
+
     }
     if ($name eq 'quiz') {
         $CTX{qn} = 0;
@@ -577,16 +597,21 @@ sub r_box {
              . inner($k, $name) . '</section>';
     }
     if ($name eq 'point') {
-        return qq{<aside class="my-6 rounded-lg border border-yellow-300 bg-yellow-50 p-4 sm:p-5">}
-             . label('text-yellow-700', 'POINT')
+        return qq{<aside class="relative my-7 bg-[#FAEFC0] p-4 pb-6 [clip-path:polygon(0_0,100%_0,100%_calc(100%-20px),calc(100%-20px)_100%,0_100%)] sm:p-5 sm:pb-7">}
+             . qq{<span aria-hidden="true" class="absolute bottom-0 right-0 h-5 w-5 bg-[#DCC878] [clip-path:polygon(0_0,100%_0,0_100%)]"></span>}
+             . label('text-yellow-800', 'POINT')
              . $title->('mb-2 font-bold leading-snug text-gray-900')
              . inner($k, $name) . '</aside>';
+
     }
     if ($name eq 'formula') {
-        return qq{<div class="my-8 rounded-lg border-2 border-dashed border-blue-300 bg-white px-4 py-5 text-center">}
-             . label('text-blue-500', 'FORMULA ― 公式')
+        my $corner = join '', map { qq{<span aria-hidden="true" class="absolute h-4 w-4 border-blue-700 $_"></span>} }
+            'left-0 top-0 border-l-2 border-t-2', 'right-0 top-0 border-r-2 border-t-2', 'bottom-0 left-0 border-b-2 border-l-2', 'bottom-0 right-0 border-b-2 border-r-2';
+        return qq{<div class="relative my-10 bg-white px-4 py-7 text-center">$corner}
+             . label('text-blue-700', 'FORMULA ― 公式')
              . $title->('mb-2 text-sm font-bold text-gray-500')
-             . '<div class="text-lg font-black leading-relaxed text-gray-900 sm:text-xl [&_p]:my-2">' . inner($k, $name) . '</div></div>';
+             . '<div class="font-serif text-lg font-black leading-relaxed text-gray-900 sm:text-xl [&_p]:my-2">' . inner($k, $name) . '</div></div>';
+
     }
     if ($name eq 'tgrid') {
         # "::tgrid compact" はスマホでも2列（小さなT字勘定向け）
@@ -1497,9 +1522,9 @@ sub r_kpi {
     for my $l (@$lines) {
         next unless $l =~ /\S/;
         my ($k, $v, $nt) = map { trim($_) } split /\|/, $l, 3;
-        $tiles .= '<div class="rounded-lg border border-gray-200 bg-gray-50 p-3">'
+        $tiles .= '<div class="border-l-2 border-shu bg-white px-3.5 py-3">'
                 . '<p class="text-[11px] font-bold leading-snug text-gray-500">' . inl($k) . '</p>'
-                . '<p class="mt-1 text-lg font-black leading-tight tabular-nums text-gray-900 sm:text-xl">' . inl($v // '') . '</p>'
+                . '<p class="mt-1 font-serif text-lg font-black leading-tight tabular-nums text-gray-900 sm:text-xl">' . inl($v // '') . '</p>'
                 . (defined $nt && $nt ne '' ? '<p class="mt-1 text-[11px] leading-snug text-gray-500">' . inl($nt) . '</p>' : '')
                 . '</div>';
     }
@@ -1513,17 +1538,17 @@ sub r_timeline {
     for my $l (@$lines) {
         next unless $l =~ /\S/;
         my ($d, $t, $x) = map { trim($_) } split /\|/, $l, 3;
-        my $dot = 'bg-amber-500';
-        if ($d =~ s/^!//) { $dot = 'bg-red-600'; }
+        my $dot = 'border-2 border-shu bg-white';
+        if ($d =~ s/^!//) { $dot = 'bg-shu'; }
         $li .= '<li class="relative pl-6">'
-             . qq{<span class="absolute -left-[7px] top-1.5 h-3 w-3 rounded-full $dot ring-4 ring-white"></span>}
-             . '<p class="text-xs font-bold tracking-wider text-gray-500">' . inl($d) . '</p>'
+             . qq{<span class="absolute -left-[7px] top-1 h-[13px] w-[13px] rounded-full $dot"></span>}
+             . '<p class="text-[11px] font-bold tracking-[0.2em] text-shu">' . inl($d) . '</p>'
              . '<p class="font-bold leading-snug text-gray-900">' . inl($t // '') . '</p>'
              . (defined $x && $x ne '' ? '<p class="mt-0.5 text-sm leading-relaxed text-gray-600">' . inl($x) . '</p>' : '')
              . '</li>';
     }
-    my $cap = $arg ne '' ? '<p class="mb-5 font-bold text-gray-900">' . inl($arg) . '</p>' : '';
-    return qq{<div class="my-8 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">$cap<ol class="ml-1.5 space-y-5 border-l-2 border-gray-200">$li</ol></div>};
+    my $cap = $arg ne '' ? '<p class="mb-6 font-serif font-black text-gray-900">' . inl($arg) . '</p>' : '';
+    return qq{<div class="my-10 border border-gray-900/20 bg-white p-5 sm:p-7">$cap<ol class="ml-1.5 space-y-6 border-l border-gray-900/25">$li</ol></div>};
 }
 
 # ---------------------------------------------------------------- toc / nav
