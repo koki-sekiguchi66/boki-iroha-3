@@ -422,10 +422,22 @@ sub rn {
     my $h = '';
     for my $n (@$nodes) {
         my $t = $n->{t};
-        if ($t eq 'p' && $parent =~ /^(?:|mystery|scene|solve)$/ && $n->{text} =~ /^「((?:(?!」).)+)」$/) {
-            # 物語のせりふ（かぎ括弧だけの段落）は、吹き出しにする
-            my $c = $DARK ? 'border-white/45 bg-white/10 text-white' : 'border-gray-900/70 bg-white text-gray-900 shadow-[3px_3px_0_0_rgba(27,36,48,.12)]';
-            $h .= termify(qq{<p class="my-3 w-fit max-w-[94%] rounded-[16px] rounded-bl-[3px] border $c px-4 py-2.5 font-sans text-[15px] font-bold leading-[1.75] sm:text-base">} . inl($1) . '</p>') . "\n";
+        if ($t eq 'p' && $n->{text} =~ /^([^「」：\s]{1,8})：「(.+)」$/) {
+            # 物語のせりふ「名前：「…」」は、名前と顔の札がついた吹き出しにする。主人公（ひより）は右側に置く
+            my ($who, $say) = ($1, $2);
+            my %COL = ('ひより' => '#C8462E', '一ノ瀬' => '#2F4A6D', '佐伯' => '#3E7C7A', '鴨川' => '#6D4C6A', '柏木' => '#5E7D63', '中西' => '#8A5A44', '父' => '#B8862F');
+            my @PAL = ('#2F4A6D', '#3E7C7A', '#6D4C6A', '#5E7D63', '#8A5A44', '#946A20', '#545C68');
+            my $col = $COL{$who} // $PAL[ hval($who, 7) % @PAL ];
+            my $me  = $who eq 'ひより';
+            my $bub = $DARK ? 'border-white/45 bg-white/10 text-white' : 'border-gray-900/70 bg-white text-gray-900 shadow-[3px_3px_0_0_rgba(27,36,48,.12)]';
+            my $nmc = $DARK ? 'text-white/80' : 'text-gray-600';
+            my $ini = esc(substr($who, 0, 1));
+            $h .= '<div class="my-3.5 flex items-start gap-2.5 font-sans' . ($me ? ' flex-row-reverse' : '') . '">'
+                . qq{<span aria-hidden="true" class="mt-4 flex h-9 w-9 flex-none items-center justify-center rounded-full font-serif text-sm font-black text-white ring-2 ring-white/70" style="background:$col">$ini</span>}
+                . '<div class="flex min-w-0 max-w-[84%] flex-col' . ($me ? ' items-end' : ' items-start') . '">'
+                . qq{<span class="mb-0.5 px-1 text-[11px] font-bold leading-none $nmc">} . esc($who) . '</span>'
+                . termify(qq{<p class="w-fit rounded-[16px] } . ($me ? 'rounded-tr-[3px]' : 'rounded-tl-[3px]') . qq{ border $bub px-4 py-2.5 text-[15px] font-bold leading-[1.75] sm:text-base">} . inl($say) . '</p>')
+                . "</div></div>\n";
             next;
         }
         if    ($t eq 'p')     { $h .= termify('<p class="my-5 leading-[1.95]">' . inl($n->{text}) . '</p>'); }
