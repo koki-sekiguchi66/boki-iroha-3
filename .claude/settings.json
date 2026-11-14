@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "textbook-skills": {
+      "source": {
+        "source": "github",
+        "repo": "koki-sekiguchi66/textbook-skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "textbook@textbook-skills": true
+  }
+}
