@@ -1,13 +1,13 @@
 {
+  "enabledPlugins": {
+    "textbook@dev-tools": true
+  },
   "extraKnownMarketplaces": {
-    "textbook-skills": {
+    "dev-tools": {
       "source": {
         "source": "github",
-        "repo": "koki-sekiguchi66/textbook-skills"
+        "repo": "koki-sekiguchi66/dev-tools"
       }
     }
-  },
-  "enabledPlugins": {
-    "textbook@textbook-skills": true
   }
 }
